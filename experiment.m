@@ -7,7 +7,7 @@ pThreshold = .75;
 beta = 3.5;
 delta = 0.05;
 gamma = 0.5;
-
+num_trials = 100;
 %% Where to store data
 datadir = '/home/nwilming/u/confidence/data/';
 
@@ -18,8 +18,9 @@ datadir = fullfile(datadir, initials);
 [s, mess, messid] = mkdir(datadir);
 quest_file = fullfile(datadir, 'quest_results.mat');
 if exist(quest_file, 'file') == 2
-    qs = load(quest_file, 'qs');
+    qs = load(quest_file, 'qs', 'results_table');
     qs = qs.qs;
+    results_table = qs.results_table;
     if ~(length(qs) == session-1)
         s = input(sprintf('There are %d sessions for this subject and you are doing session %d - so there is a gap. Want to stop here? [y/n] ', length(qs), session), 's');
         if strcmp(s, 'y')
@@ -75,7 +76,7 @@ try
         'contrast', [], 'contrast_left', [], 'contrast_right', [],...
         'confidence', [], 'confidence_rt', []);
     
-    for trial = 1:50
+    for trial = 1:num_trials
         try
             contrast = abs(QuestQuantile(q, [0.5]));
             side = randsample([1,-1], 1);
@@ -122,4 +123,4 @@ qs{session} = q;
 session_table = struct2table(results);
 results_table{session} = session_table;
 save(fullfile(datadir, 'quest_results.mat'), 'qs', 'results_table')
-writetable(results_table, fullfile(datadir, sprintf('%s_%d_results.csv', initials, session)));
+writetable(session_table, fullfile(datadir, sprintf('%s_%d_results.csv', initials, session)));
