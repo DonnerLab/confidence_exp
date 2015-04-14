@@ -107,7 +107,6 @@ while ~((GetSecs - stimulus_onset) >= length(contrast_left)*duration)
     
     % Draw the fixation point
     Screen('DrawDots', window, [xCenter; yCenter], 10, black, [], 1);
-    vbl = Screen('DrawText', window, sprintf('%2.2f', GetSecs-start), 0, 0);
     
     % Flip our drawing to the screen
     vbl = Screen('Flip', window, vbl + (waitframes - 0.5) * ifi);
@@ -119,7 +118,6 @@ while ~((GetSecs - stimulus_onset) >= length(contrast_left)*duration)
         start = GetSecs;
     end
     if (elapsed-start) > duration
-        vbl = Screen('DrawText', window,  sprintf('%2.2f', elapsed-start), 0, 40);
         vala = contrast_left(1 + mod(cnt, length(contrast_left)));
         valb = contrast_right(1 + mod(cnt, length(contrast_right)));
         propertiesMat(:,4) = [vala valb];

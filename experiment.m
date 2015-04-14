@@ -5,7 +5,7 @@
 rng('shuffle')
 pThreshold = .75;
 beta = 3.5;
-delta = 0.05;
+delta = 0.01;
 gamma = 0.5;
 num_trials = 100;
 %% Where to store data
@@ -19,8 +19,8 @@ datadir = fullfile(datadir, initials);
 quest_file = fullfile(datadir, 'quest_results.mat');
 if exist(quest_file, 'file') == 2
     qs = load(quest_file, 'qs', 'results_table');
-    qs = qs.qs;
     results_table = qs.results_table;
+    qs = qs.qs;
     if ~(length(qs) == session-1)
         s = input(sprintf('There are %d sessions for this subject and you are doing session %d - so there is a gap. Want to stop here? [y/n] ', length(qs), session), 's');
         if strcmp(s, 'y')
@@ -33,16 +33,18 @@ if exist(quest_file, 'file') == 2
 else    
     qs = {};
     results_table = {};
-    threshold_guess = 1.5;
-    threshold_guess_sigma = 15;
+    threshold_guess = 0.15;
+    threshold_guess_sigma = 1.5;
 end
 
 
+%% Some Setup
 AssertOpenGL;
 sca;
 PsychDefaultSetup(2);
 InitializePsychSound;
 pahandle = PsychPortAudio('Open', [], [], 0);
+
 
 try
     screenNumber = max(Screen('Screens'));
@@ -71,16 +73,18 @@ try
     % Do Quest to determine threshold
     q = QuestCreate(threshold_guess, threshold_guess_sigma, pThreshold, beta, delta, gamma);
     q.updatePdf = 1;
-    baseline_contrast = 10;
+    baseline_contrast = 0.5;
+    sigma = 0.15;
     results = struct('response', [], 'side', [], 'choice_rt', [], 'correct', [],...
         'contrast', [], 'contrast_left', [], 'contrast_right', [],...
         'confidence', [], 'confidence_rt', []);
-    
+
+%% Do Experiment
     for trial = 1:num_trials
         try
             contrast = abs(QuestQuantile(q, [0.5]));
             side = randsample([1,-1], 1);
-            [contrast_a, contrast_b] = sample_contrast(contrast, baseline_contrast);
+            [contrast_a, contrast_b] = sample_contrast(contrast, sigma, baseline_contrast);
             if side == -1
                 contrast_left = contrast_a;
                 contrast_right = contrast_b;
