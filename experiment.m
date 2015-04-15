@@ -7,7 +7,7 @@ pThreshold = .75;
 beta = 3.5;
 delta = 0.01;
 gamma = 0.5;
-num_trials = 100;
+num_trials = 25;
 %% Where to store data
 datadir = '/home/nwilming/u/confidence/data/';
 
@@ -45,7 +45,7 @@ PsychDefaultSetup(2);
 InitializePsychSound;
 pahandle = PsychPortAudio('Open', [], [], 0);
 
-
+timings = {};
 try
     screenNumber = max(Screen('Screens'));
     
@@ -95,11 +95,12 @@ try
             % set options for this experiment
             trial_options = [opts, {'contrast_left', contrast_left,...
                 'contrast_right', contrast_right,...
-                'gabor_angle', rand*180}]
+                'gabor_angle', rand*180}];
             
-            [correct, response, confidence, rt_choice, rt_conf] = one_trial(window, windowRect,...
+            [correct, response, confidence, rt_choice, rt_conf, timing] = one_trial(window, windowRect,...
                 screenNumber, side, gabortex, gabor_dim_pix, pahandle, trial_options);
             
+            timings{trial} = timing;
             q = QuestUpdate(q, contrast, correct);
             results(trial) = struct('response', response, 'side', side, 'choice_rt', rt_choice, 'correct', correct,...
                 'contrast', contrast, 'contrast_left', contrast_left, 'contrast_right', contrast_right,...

@@ -1,5 +1,6 @@
-function [correct, response, confidence, rt_choice, rt_conf] = one_trial(window, windowRect, screen_number, correct_location, gabortex, gaborDimPix, pahandle, variable_arguments)
-%%
+function [correct, response, confidence, rt_choice, rt_conf, timing] = one_trial(window, windowRect, screen_number, correct_location, gabortex, gaborDimPix, pahandle, variable_arguments)
+%% function [correct, response, confidence, rt_choice, rt_conf] = one_trial(window, windowRect, screen_number, correct_location, gabortex, gaborDimPix, pahandle, variable_arguments)
+%
 % Presents two Gabor patches that vary in contrast over time and then asks
 % for which one of the two had higher contrast and the confidence of the
 % decision.
@@ -18,8 +19,6 @@ function [correct, response, confidence, rt_choice, rt_conf] = one_trial(window,
 %  with the current contrastpremult and background settings.
 
 
-
-
 %% Process variable input stuff
 sigma = default_arguments(variable_arguments, 'sigma', gaborDimPix/6); % Sigma of the gaussian for the Gabor patch
 contrast_left = default_arguments(variable_arguments, 'contrast_left', [10, 9, 8, 7, 6, 5, 4, 3, 2, 1]/10.); % Contrast of the left patch
@@ -36,6 +35,9 @@ decision_delay = default_arguments(variable_arguments, 'decision_delay', 0.25);
 confidence_delay = default_arguments(variable_arguments, 'confidence_delay', 0.5);
 feedback_delay = default_arguments(variable_arguments, 'confidence_delay', 0.5);
 rest_delay = default_arguments(variable_arguments, 'confidence_delay', 0.5);
+beeps = {MakeBeep(150, .25), MakeBeep(350, .25)};
+
+timing = struct();
 %% Key mappings
 left_key = KbName('LeftArrow');
 right_key = KbName('RightArrow');
@@ -46,7 +48,6 @@ down_key = KbName('DownArrow');
 quit = KbName('q');
 
 % Define black, white and grey
-white = WhiteIndex(screen_number);
 black = BlackIndex(screen_number);
 
 %% Properties of the gabor
@@ -79,27 +80,22 @@ propertiesMat(:, 4) = [contrast_left(1) contrast_right(1)];
 % Draw the fixation point
 Screen('DrawDots', window, [xCenter; yCenter], 10, black, [], 1);
 vbl = Screen('Flip', window);
-WaitSecs(baseline_delay)
-
-
-% Numer of frames to wait before re-drawing
-waitframes = 1;
+timing.TrialOnset = vbl;
+waitframes = baseline_delay/ifi;
 % Animation loop
 start = nan;
 cnt = 1;
-
+dynamic = [];
 stimulus_onset = nan;
-while ~((GetSecs - stimulus_onset) >= length(contrast_left)*duration)
+while ~((GetSecs - stimulus_onset) >= (length(contrast_left)*duration-1*ifi))
     
     % Set the right blend function for drawing the gabors
     %Screen('BlendFunction', window, 'GL_ONE', 'GL_ZERO');
     Screen('BlendFunction', window, 'GL_SRC_ALPHA', 'GL_ONE_MINUS_SRC_ALPHA');
     
-    % Batch draw all of the Gabors to screen
-    
+    % Batch draw all of the Gabors to screen    
     Screen('DrawTextures', window, gabortex, [], allRects, gaborAngles - 90,...
-        [], [], [], [], kPsychDontDoRotation, propertiesMat');
-    
+        [], [], [], [], kPsychDontDoRotation, propertiesMat');    
     
     % Change the blend function to draw an antialiased fixation point
     % in the centre of the array
@@ -110,7 +106,8 @@ while ~((GetSecs - stimulus_onset) >= length(contrast_left)*duration)
     
     % Flip our drawing to the screen
     vbl = Screen('Flip', window, vbl + (waitframes - 0.5) * ifi);
-    
+    waitframes = 1;
+    dynamic = [dynamic vbl];
     % Change contrast every 100ms
     elapsed = GetSecs;
     if isnan(start)
@@ -130,18 +127,21 @@ while ~((GetSecs - stimulus_onset) >= length(contrast_left)*duration)
 end
 % in the centre of the array
 Screen('BlendFunction', window, 'GL_SRC_ALPHA', 'GL_ONE_MINUS_SRC_ALPHA');
-
+timing.animation = dynamic;
 
 %%% Get choice
 % Draw the fixation point
 Screen('DrawDots', window, [xCenter; yCenter], 10, black, [], 1);
 vbl = Screen('Flip', window, vbl + (waitframes - 0.5) * ifi);
-WaitSecs(decision_delay);
+timing.animation_offset = vbl;
+waitframes = decision_delay/ifi;
 Screen('DrawDots', window, [xCenter; yCenter], 10, [0.5, 0.75, 0.5, 1 ], [], 1);
 vbl = Screen('Flip', window, vbl + (waitframes - 0.5) * ifi);
+
+timing.response_cue = vbl;
 start = GetSecs;
 rt_choice = nan;
-while (GetSecs-start) < 100
+while (GetSecs-start) < 2
     [~, RT, keyCode] = KbCheck;
     if keyCode(quit)        
         throw(MException('EXP:Quit', 'User request quit'));
@@ -165,13 +165,15 @@ end
 %%% Get confidence response
 % Draw the fixation point
 Screen('DrawDots', window, [xCenter; yCenter], 10, black, [], 1);
-vbl = Screen('Flip', window, vbl + (waitframes - 0.5) * ifi);
-WaitSecs(confidence_delay);
+vbl = Screen('Flip', window);
+timing.start_confidence_delay = vbl;
+waitframes = confidence_delay/ifi;
 Screen('DrawDots', window, [xCenter; yCenter], 10, [0.5, 0.5, 0.75, 1 ], [], 1);
 vbl = Screen('Flip', window, vbl + (waitframes - 0.5) * ifi);
+timing.confidence_cue = vbl;
 start = GetSecs;
 rt_conf = nan;
-while (GetSecs-start) < 100
+while (GetSecs-start) < 2
     [~, RT, keyCode] = KbCheck;
     if keyCode(up_key) || keyCode(down_key)
         if keyCode(up_key)
@@ -184,17 +186,24 @@ while (GetSecs-start) < 100
     end
 end
 
-if correct
-    beep = MakeBeep(350, .25);
-else
-    beep = MakeBeep(150, .25);
-end
-% Fill the audio playback buffer with the audio data 'wavedata':
+beep = beeps{correct+1};
+% Fill the audio playback buffer with the audio data 'wavedata'
 PsychPortAudio('FillBuffer', pahandle, repmat(beep, [2,1]));
 %%% Provide Feedback
 % Draw the fixation point
+
 Screen('DrawDots', window, [xCenter; yCenter], 10, black, [], 1);
+vbl = Screen('Flip', window);
+timing.feedback_delay_start = vbl;
+
+Screen('DrawDots', window, [xCenter; yCenter], 10, black, [], 1);
+waitframes = (feedback_delay/ifi) - 2;
 vbl = Screen('Flip', window, vbl + (waitframes - 0.5) * ifi);
-WaitSecs(feedback_delay);
+
 t1 = PsychPortAudio('Start', pahandle, 1, 0, 1);
-WaitSecs(rest_delay);
+timing.feedback_start = t1;
+
+Screen('DrawDots', window, [xCenter; yCenter], 10, black, [], 1);
+waitframes = rest_delay/ifi;
+vbl = Screen('Flip', window, t1 + (waitframes - 0.5) * ifi);
+timing.trial_end = vbl;
