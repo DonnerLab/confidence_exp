@@ -6,21 +6,24 @@
 %% Global parameters.
 rng('shuffle')
 
-num_trials = 25; % How many trials?
-datadir = '/home/nwilming/u/confidence/data/';
+num_trials = 15; % How many trials?
+datadir = '/Users/nwilming/u/confidence/data/';
 
 % QUEST Parameters
 pThreshold = .75; % Performance level and other QUEST parameters
-beta = 3.5; 
+beta = 3.5;
 delta = 0.01;
 gamma = 0.15;
 % Parameters for sampling the contrast + contrast noise
 baseline_contrast = 0.5;
-noise_sigma = 0.15;   
+noise_sigma = 0.15;
 threshold_guess = 0.5;
 threshold_guess_sigma = 0.5;
 % Size of the gabor
 gabor_dim_pix = 500;
+
+% Should we repeat contrast levels? 1 = yes, 0 = no
+repeat_contrast_levels = 1;
 % Parameters that control appearance of the gabors that are constant over
 % trials
 opts = {'sigma', gabor_dim_pix/6,...
@@ -36,7 +39,7 @@ try
     quest_file = fullfile(datadir, 'quest_results.mat');
     session_struct = struct('q', [], 'results', [], 'date', datestr(clock));
     results_struct = session_struct;
-    
+    session_identifier = datestr(clock);
     append_data = false;
     if exist(quest_file, 'file') == 2
         if strcmp(input('There is previous data for this subject. Load last QUEST parameters? [y/n] ', 's'), 'y')
@@ -60,7 +63,7 @@ try
     
     timings = {};
     
-    screenNumber = max(Screen('Screens'));
+    screenNumber = min(Screen('Screens'));
     
     % Open the screen
     %[window, windowRect] = PsychImaging('OpenWindow', screenNumber, grey, [400, 0, 1600, 900], 32, 2, [], [],  kPsychNeed32BPCFloat);
@@ -72,7 +75,7 @@ try
     gabortex = make_gabor(window, 'gabor_dim_pix', gabor_dim_pix);
     % Maximum priority level
     topPriorityLevel = MaxPriority(window);
-          
+    
     % Set up QUEST
     q = QuestCreate(threshold_guess, threshold_guess_sigma, pThreshold, beta, delta, gamma);
     q.updatePdf = 1;
@@ -80,15 +83,46 @@ try
     % A structure to save results.
     results = struct('response', [], 'side', [], 'choice_rt', [], 'correct', [],...
         'contrast', [], 'contrast_left', [], 'contrast_right', [],...
-        'confidence', [], 'confidence_rt', []);
+        'confidence', [], 'confidence_rt', [], 'repeat', [], 'repeated_stim', [], 'session', []);
     
+    % Sometimes we want to repeat the same contrast fluctuations, load them
+    % here. You also need to set the repeat interval manually. The repeat
+    % interval specifies the interval between repeated contrast levels.
+    % If you want to show each of, e.g. 5 repeats twice and you have 100
+    % trials, set it to 10.
+    repeat_contrast_levels = 1;
+    if repeat_contrast_levels
+        contrast_file_name = fullfile(datadir, 'repeat_contrast_levels.mat');
+        repeat_levels = load(contrast_file_name, 'levels');
+        repeat_levels = repeat_levels.levels;
+        % I assume that repeat_contrast_levels contains a struct array with
+        % fields contrast_a and contrast_b.
+        assert(num_trials > length(repeat_levels));
+        repeat_interval = 2; %'Replace with a sane value'; % <-- Set me!
+        repeat_counter = 1;
+    end
     %% Do Experiment
     for trial = 1:num_trials
         try
-            % Sample contrasts.
-            contrast = min(1, max(0, (QuestQuantile(q, 0.5))));
+            repeat_trial = false;
+            repeated_stim = nan;
+            fprintf('Trial: %i\n', trial);
+            if repeat_contrast_levels && mod(trial, repeat_interval)==0
+                fprintf('This is a repeated stimulus\n');
+                repeat_trial = true;
+                repeated_stim = mod(repeat_counter-1, length(repeat_levels))+1;
+                contrast_a = repeat_levels(repeated_stim).contrast_a;
+                contrast_b = repeat_levels(repeated_stim).contrast_b;
+                contrast = repeat_levels(repeated_stim).contrast;
+                repeat_counter = repeat_counter+1;
+            else
+                fprintf('This is NOT a repeated stimulus\n');
+                % Sample contrasts.
+                contrast = min(1, max(0, (QuestQuantile(q, 0.5))));
+                [contrast_a, contrast_b] = sample_contrast(contrast, noise_sigma, baseline_contrast);
+            end
             side = randsample([1,-1], 1);
-            [contrast_a, contrast_b] = sample_contrast(contrast, noise_sigma, baseline_contrast);
+            
             if side == -1
                 contrast_left = contrast_a;
                 contrast_right = contrast_b;
@@ -96,11 +130,12 @@ try
                 contrast_left = contrast_b;
                 contrast_right = contrast_a;
             end
+            
             % Set options that are valid only for this trial.
             trial_options = [opts, {'contrast_left', contrast_left,...
                 'contrast_right', contrast_right,...
                 'gabor_angle', rand*180,...
-                'baseline_delay', 1 + rand*0.5,...                
+                'baseline_delay', 1 + rand*0.5,...
                 'confidence_delay', 0.5 + rand*1,...
                 'feedback_delay', 0.5 + rand*1,...
                 'rest_delay', 0.5}];
@@ -109,12 +144,13 @@ try
                 screenNumber, side, gabortex, gabor_dim_pix, pahandle, trial_options);
             
             timings{trial} = timing;
-            if ~isnan(correct)
+            if ~isnan(correct) && ~repeat_trial
                 q = QuestUpdate(q, contrast, correct);
             end
             results(trial) = struct('response', response, 'side', side, 'choice_rt', rt_choice, 'correct', correct,...
                 'contrast', contrast, 'contrast_left', contrast_left, 'contrast_right', contrast_right,...
-                'confidence', confidence, 'confidence_rt', rt_conf);
+                'confidence', confidence, 'confidence_rt', rt_conf, 'repeat', repeat_trial, 'repeated_stim', repeated_stim,...
+                'session', session_identifier);
         catch ME
             if (strcmp(ME.identifier,'EXP:Quit'))
                 break
