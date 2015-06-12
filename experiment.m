@@ -6,7 +6,11 @@
 %% Global parameters.
 rng('shuffle')
 
-num_trials = 15; % How many trials?
+% general setup
+setup.MEG           = true; % true if sending triggers to the MEG
+setup.Eye           = true; % true if using Eyelink
+
+num_trials = 150; % How many trials?
 datadir = '/Users/nwilming/u/confidence/data/';
 
 % QUEST Parameters
@@ -17,7 +21,7 @@ gamma = 0.15;
 % Parameters for sampling the contrast + contrast noise
 baseline_contrast = 0.5;
 noise_sigma = 0.15;
-threshold_guess = 0.5;
+threshold_guess = 0.25;
 threshold_guess_sigma = 0.5;
 % Size of the gabor
 gabor_dim_pix = 500;
@@ -31,6 +35,22 @@ opts = {'sigma', gabor_dim_pix/6,...
     'duration', .1,...
     'xpos', [-10, 10],...
     'ypos', [5, 5]}; % Position Gabors in the lower hemifield to get activation in the dorsal pathaway
+
+%% Setup the ParPort
+if setup.MEG,
+    % install and/or initialize the kernel-level I/O driver
+    config_io;
+    % optional step: verify that the driver was successfully installed/initialized
+    global cogent;
+    if( cogent.io.status ~= 0 )
+        error('inp/outp installation failed');
+    end
+    
+    % DO NOT USE DUAL MONITOR SETUP ON WINDOWS 7 !!!!!!!
+    vswitch(00); % switches to single monitor, will have the taskbar but more accurate timing
+end
+
+
 try
     %% Ask for some subject details and load old QUEST parameters
     initials = input('Initials? ', 's');
@@ -54,25 +74,7 @@ try
         
     end
     
-    %% Some Setup
-    AssertOpenGL;
-    sca;
-    PsychDefaultSetup(2);
-    InitializePsychSound;
-    pahandle = PsychPortAudio('Open', [], [], 0);
-    
     timings = {};
-    
-    screenNumber = min(Screen('Screens'));
-    
-    % Open the screen
-    %[window, windowRect] = PsychImaging('OpenWindow', screenNumber, grey, [400, 0, 1600, 900], 32, 2, [], [],  kPsychNeed32BPCFloat);
-    [window, windowRect] = PsychImaging('OpenWindow', screenNumber, 0.5, [], 32, 2, [], [],  kPsychNeed32BPCFloat);
-    HideCursor(screenNumber)
-    Screen('Flip', window);
-    
-    % Make gabortexture
-    gabortex = make_gabor(window, 'gabor_dim_pix', gabor_dim_pix);
     % Maximum priority level
     topPriorityLevel = MaxPriority(window);
     
@@ -83,14 +85,14 @@ try
     % A structure to save results.
     results = struct('response', [], 'side', [], 'choice_rt', [], 'correct', [],...
         'contrast', [], 'contrast_left', [], 'contrast_right', [],...
-        'confidence', [], 'confidence_rt', [], 'repeat', [], 'repeated_stim', [], 'session', []);
+        'confidence', [], 'confidence_rt', [], 'repeat', [], 'repeated_stim', [], 'session', [], 'random_offset', []);
     
     % Sometimes we want to repeat the same contrast fluctuations, load them
     % here. You also need to set the repeat interval manually. The repeat
     % interval specifies the interval between repeated contrast levels.
     % If you want to show each of, e.g. 5 repeats twice and you have 100
     % trials, set it to 10.
-    repeat_contrast_levels = 1;
+    repeat_contrast_levels = 0;
     if repeat_contrast_levels
         contrast_file_name = fullfile(datadir, 'repeat_contrast_levels.mat');
         repeat_levels = load(contrast_file_name, 'levels');
@@ -119,7 +121,9 @@ try
                 fprintf('This is NOT a repeated stimulus\n');
                 % Sample contrasts.
                 contrast = min(1, max(0, (QuestQuantile(q, 0.5))));
-                [contrast_a, contrast_b] = sample_contrast(contrast, noise_sigma, baseline_contrast);
+                random_offset = (rand-0.5)*.5;
+                [contrast_a, contrast_b] = sample_contrast(contrast, noise_sigma, baseline_contrast+random_offset);
+                
             end
             side = randsample([1,-1], 1);
             
@@ -150,7 +154,7 @@ try
             results(trial) = struct('response', response, 'side', side, 'choice_rt', rt_choice, 'correct', correct,...
                 'contrast', contrast, 'contrast_left', contrast_left, 'contrast_right', contrast_right,...
                 'confidence', confidence, 'confidence_rt', rt_conf, 'repeat', repeat_trial, 'repeated_stim', repeated_stim,...
-                'session', session_identifier);
+                'session', session_identifier, 'random_offset', random_offset);
         catch ME
             if (strcmp(ME.identifier,'EXP:Quit'))
                 break
@@ -159,16 +163,16 @@ try
             end
         end
     end
-catch ME
+catch ME   
+    LoadIdentityClut(window);    
     if (strcmp(ME.identifier,'EXP:Quit'))
         return
     else
+        disp(getReport(ME,'extended'));
         rethrow(ME);
-    end
-    PsychPortAudio('Close');
-    disp(getReport(ME,'extended'));
-    
+    end        
 end
+LoadIdentityClut(window)
 PsychPortAudio('Close');
 sca
 fprintf('Saving data to %s\n', datadir)
