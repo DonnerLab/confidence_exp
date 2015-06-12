@@ -1,4 +1,4 @@
-function [correct, response, confidence, rt_choice, rt_conf, timing] = one_trial(window, windowRect, screen_number, correct_location, gabortex, gabor_dim_pix, pahandle, variable_arguments)
+function [correct, response, confidence, rt_choice, rt_conf, timing] = one_trial(window, windowRect, screen_number, correct_location, gabortex, gabor_dim_pix, pahandle, trigger, variable_arguments)
 %% function [correct, response, confidence, rt_choice, rt_conf] = one_trial(window, windowRect, screen_number, correct_location, gabortex, gaborDimPix, pahandle, variable_arguments)
 %
 % Presents two Gabor patches that vary in contrast over time and then asks
@@ -69,13 +69,22 @@ rest_delay = default_arguments(variable_arguments, 'rest_delay', 0.5);
 %% Setting the stage
 beeps = {MakeBeep(150, .25), MakeBeep(350, .25)};
 timing = struct();
-left_key = KbName('LeftArrow');
-right_key = KbName('RightArrow');
-conf_very_high = KbName('f');
-conf_high = KbName('d');
-conf_low = KbName('s');
-conf_very_low = KbName('a');
-quit = KbName('q');
+
+% left_key = KbName('1!');
+% right_key = KbName('2@');
+% conf_very_high = KbName('1!');
+% conf_high = KbName('2@');
+% conf_low = KbName('3#');
+% conf_very_low = KbName('4$');
+
+left_key = 'LeftArrow';
+right_key = 'RightArrow';
+conf_very_high = 'f';
+conf_high = 'd';
+conf_low = 's';
+conf_very_low = 'a';
+quit = 'ESCAPE';
+
 black = BlackIndex(screen_number);
 
 % Properties of the gabor
@@ -100,24 +109,39 @@ propertiesMat = repmat([NaN, freq, sigma, 0, 1, 0, 0, 0],...
 propertiesMat(:, 1) = 0;
 propertiesMat(:, 4) = [contrast_left(1) contrast_right(1)];
 
+if correct_location == -1
+    outp(trigger.address, trigger.stim_strong_right);
+elseif correct_location == 1    
+    outp(trigger.address, trigger.stim_strong_left);
+end
+WaitSecs(0.01);
+outp(trigger.address, trigger.zero);
+
 
 %% Baseline Delay period
 % Draw the fixation point
 Screen('DrawDots', window, [xCenter; yCenter], 10, black, [], 1);
 vbl = Screen('Flip', window);
 timing.TrialOnset = vbl;
-waitframes = baseline_delay/ifi;
 
+outp(trigger.address, trigger.trial_start);
+WaitSecs(0.01);
+outp(trigger.address, trigger.zero);
+
+waitframes = (baseline_delay-0.01)/ifi;
+
+PsychHID('KbQueueFlush');
 %% Animation loop
 start = nan;
 cnt = 1;
+framenum = 1;
 dynamic = [];
 stimulus_onset = nan;
 while ~((GetSecs - stimulus_onset) >= (length(contrast_left)*duration-1*ifi))
     
     % Set the right blend function for drawing the gabors
-    %Screen('BlendFunction', window, 'GL_ONE', 'GL_ZERO');
-    Screen('BlendFunction', window, 'GL_SRC_ALPHA', 'GL_ONE_MINUS_SRC_ALPHA');
+    Screen('BlendFunction', window, 'GL_ONE', 'GL_ZERO');
+    %Screen('BlendFunction', window, 'GL_SRC_ALPHA', 'GL_ONE_MINUS_SRC_ALPHA');
     
     % Batch draw all of the Gabors to screen
     Screen('DrawTextures', window, gabortex, [], allRects, gaborAngles - 90,...
@@ -132,6 +156,14 @@ while ~((GetSecs - stimulus_onset) >= (length(contrast_left)*duration-1*ifi))
     
     % Flip our drawing to the screen
     vbl = Screen('Flip', window, vbl + (waitframes - 0.5) * ifi);
+    if framenum == 1 && cnt == 1
+        Eyelink('message', 'SYNCTIME');
+        outp(trigger.address, trigger.stim_onset);
+    elseif framenum > 1
+        outp(trigger.address, trigger.zero);
+    elseif framenum == 1 && ~(cnt==1)
+        outp(trigger.address, trigger.con_change);
+    end
     waitframes = 1;
     dynamic = [dynamic vbl];
     % Change contrast every 100ms
@@ -151,43 +183,73 @@ while ~((GetSecs - stimulus_onset) >= (length(contrast_left)*duration-1*ifi))
     % Increment the phase of our Gabors
     propertiesMat(:, 1) =  propertiesMat(:, 1) + degPerFrame;
 end
+target = (waitframes - 0.5) * ifi;
+if decision_delay > 0    
+    Screen('DrawDots', window, [xCenter; yCenter], 10, black, [], 1);        
+    vbl = Screen('Flip', window, vbl + (waitframes-0.5)*ifi);
+    Eyelink('message', 'stim_off');
+    outp(trigger.address, trigger.stim_off);
+    WaitSecs(0.01);
+    outp(trigger.address, trigger.zero);
+    target = decision_delay -0.01 - 0.5 * ifi;
+end
+PsychHID('KbQueueFlush');
 % in the centre of the array
 Screen('BlendFunction', window, 'GL_SRC_ALPHA', 'GL_ONE_MINUS_SRC_ALPHA');
 timing.animation = dynamic;
 
 %%% Get choice
-% Draw the fixation pointsca
+% Draw the fixation point
+Screen('DrawDots', window, [xCenter; yCenter], 10, 255*[1, 0.25, 0.25, 1 ], [], 1);
+vbl = Screen('Flip', window, vbl + target );
+outp(trigger.address, trigger.decision_start);
+Eyelink('message', 'decision_start');
 
-Screen('DrawDots', window, [xCenter; yCenter], 10, [1, 0.25, 0.25, 1 ], [], 1);
-vbl = Screen('Flip', window, vbl + (waitframes - 0.5) * ifi);
 timing.response_cue = vbl;
 start = GetSecs;
 rt_choice = nan;
 key_pressed = false;
-while (GetSecs-start) < 2
-    [~, RT, keyCode] = KbCheck;
-    if keyCode(quit)
-        throw(MException('EXP:Quit', 'User request quit'));
-    end
-    if keyCode(left_key) || keyCode(right_key)
-        if keyCode(left_key)
-            response = 1;
-        else
-            response = -1;
+error = false;
+response = nan;
+while (GetSecs-start) < 2    
+    [keyIsDown, firstPress] = PsychHID('KbQueueCheck');
+    RT = GetSecs();
+    if keyIsDown
+        keys = KbName(firstPress);
+        if iscell(keys)
+            error = true;
+            break
         end
-        if correct_location == response
-            correct = 1;
-        else
-            correct = 0;
+        switch keys
+            case quit
+                throw(MException('EXP:Quit', 'User request quit'));
+            case left_key
+                Eyelink('message', 'decision left');
+                outp(trigger.address, trigger.resp_left);
+                response = 1;
+            case right_key
+                Eyelink('message', 'decision right');
+                outp(trigger.address, trigger.resp_right);
+                response = -1;
         end
-        rt_choice = RT-start;
-        key_pressed = true;
-        break;
+        if ~isnan(response)
+            if correct_location == response
+                correct = 1;
+            else
+                correct = 0;
+            end
+            rt_choice = RT-start;
+            key_pressed = true;
+            break;
+        end
     end
 end
 Screen('DrawDots', window, [xCenter; yCenter], 10, black, [], 1);
 vbl = Screen('Flip', window);
-if ~key_pressed
+if ~key_pressed || error 
+    outp(trigger.address, trigger.no_decisions);
+    Eyelink('message', 'decision none');
+    fprintf('Error in answer\n')
     wait_period = confidence_delay + 1 + feedback_delay + rest_delay;
     WaitSecs(wait_period);
     correct = nan;
@@ -202,32 +264,63 @@ end
 key_pressed = false;
 timing.start_confidence_delay = vbl;
 waitframes = confidence_delay/ifi;
-Screen('DrawDots', window, [xCenter; yCenter], 10, [0.25, 1, 0.25, 1 ], [], 1);
+Screen('DrawDots', window, [xCenter; yCenter], 10, 255*[0.25, 1, 0.25, 1 ], [], 1);
 vbl = Screen('Flip', window, vbl + (waitframes - 0.5) * ifi);
+PsychHID('KbQueueFlush');
+outp(trigger.address, trigger.confidence_start);
+Eyelink('message', 'confidence start');
 timing.confidence_cue = vbl;
 start = GetSecs;
 rt_conf = nan;
+error = false;
 while (GetSecs-start) < 2
-    [~, RT, keyCode] = KbCheck;
-    if keyCode(conf_very_high) || keyCode(conf_high) || keyCode(conf_very_low) || keyCode(conf_low)
-        key_pressed = true;
-        if keyCode(conf_very_high)
-            confidence = 2;
-        elseif keyCode(conf_high)
-            confidence = 1;
-        elseif keyCode(conf_low)
-            confidence = -1;
-        elseif keyCode(conf_very_low)            
-            confidence = -2;
+    [keyIsDown, firstPress] = PsychHID('KbQueueCheck');
+    RT = GetSecs();    
+    if keyIsDown
+        keys = KbName(firstPress);
+        if iscell(keys)
+            error = true;
+            break
         end
-        rt_conf = RT-start;
-        break;
+        switch keys
+            case conf_very_high
+                outp(trigger.address, trigger.conf_very_high);
+                Eyelink('message', 'confidence very_high');
+                confidence = 2;
+                key_pressed = true;
+                rt_conf = RT-start;
+                break;
+            case conf_high
+                Eyelink('message', 'confidence high');
+                outp(trigger.address, trigger.conf_high);
+                confidence = 1;
+                key_pressed = true;
+                rt_conf = RT-start;
+                break;
+            case conf_low
+                Eyelink('message', 'confidence low');
+                outp(trigger.address, trigger.conf_low);
+                confidence = -1;
+                key_pressed = true;
+                rt_conf = RT-start;
+                break;
+            case conf_very_low
+                Eyelink('message', 'confidence very_low');
+                outp(trigger.address, trigger.conf_very_low);
+                confidence = -2;
+                key_pressed = true;
+                rt_conf = RT-start;
+                break;
+        end
+
     end
 end
 Screen('DrawDots', window, [xCenter; yCenter], 10, black, [], 1);
 vbl = Screen('Flip', window);
 
-if ~key_pressed
+if ~key_pressed || error
+    outp(trigger.address, trigger.no_confidence);
+    Eyelink('message', 'confidence none');
     wait_period = 0.5 + feedback_delay + rest_delay;
     WaitSecs(wait_period);
     confidence = nan;
@@ -237,15 +330,23 @@ end
 
 %% Provide Feedback
 beep = beeps{correct+1};
-PsychPortAudio('FillBuffer', pahandle, repmat(beep, [2,1]));
+PsychPortAudio('FillBuffer', pahandle.h, repmat(beep, [2,1]));
 timing.feedback_delay_start = vbl;
 Screen('DrawDots', window, [xCenter; yCenter], 10, black, [], 1);
 waitframes = (feedback_delay/ifi) - 2;
 vbl = Screen('Flip', window, vbl + (waitframes - 0.5) * ifi);
-t1 = PsychPortAudio('Start', pahandle, 1, 0, 1);
+t1 = PsychPortAudio('Start', pahandle.h, 1, 0, 1);
+if correct
+    outp(trigger.address, trigger.feedback_correct);
+    Eyelink('message', 'decision correct');
+else
+    outp(trigger.address, trigger.feedback_incorrect);
+    Eyelink('message', 'decision incorrect');
+end
 timing.feedback_start = t1;
 
 Screen('DrawDots', window, [xCenter; yCenter], 10, black, [], 1);
 waitframes = rest_delay/ifi;
 vbl = Screen('Flip', window, t1 + (waitframes - 0.5) * ifi);
 timing.trial_end = vbl;
+outp(trigger.address, trigger.trial_end);
