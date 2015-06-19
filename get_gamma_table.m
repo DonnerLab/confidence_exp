@@ -11,4 +11,4 @@ displayGamma = fittedmodel.g;
 gamma = max(values)*(((resolution'/maxLevel))).^(1/fittedmodel.g) / max_val; %#ok<NBRAK>
 
 luminance = max(values)*fittedmodel(resolution/maxLevel) / max_val; %#ok<NBRAK>
-signal = resolution;
+signal = resolution/maxLevel;

@@ -6,7 +6,7 @@ displayRange= nan(10,1);
 raw_values = nan(10, 9);
 options.gabor_dim_pix = 300;
 
-for j = 1:10
+for j = 1:1
     tic;
     [gammaTable1, gammaTable2, displayBaseline, dr, dg, maxLevel, vals, levels] = calibrate_display(9, 31.9, options.gabor_dim_pix, {'xpos', [-10, 10], 'ypos', [6.5, 6.5]});
     toc
