@@ -1,10 +1,11 @@
-function [ gammaTables1, gammaTables2, displayBaselines, displayRanges, displayGammas, maxLevel, measurements, levels] = calibrate_display(numMeasures, ppd, gabor_dim_pix, variable_arguments)
+function [ gammaTables1, gammaTables2, displayBaselines, displayRanges, displayGammas, maxLevel, measurements, levels] = calibrate_display(numMeasures, ppd, gabor_dim_pix, varargin)
 % Adapt psychtoolbox's CalibrateMonitorPhotometer to show two stimuli at
 % different locations and to read measurements from a color hug.
 
-xpos = default_arguments(variable_arguments, 'xpos', [-10, 10]);
-ypos = default_arguments(variable_arguments, 'ypos', [0, 0]);
-
+xpos = default_arguments(varargin, 'xpos', [-10, 10]);
+ypos = default_arguments(varargin, 'ypos', [0, 0]);
+devices = default_arguments(varargin, 'devices', [1, 2]);
+path = default_arguments(varargin, 'path', '/home/meg/Documents/Argyll_V1.7.0/bin');
 
 screenid = max(Screen('Screens'));
 
@@ -43,30 +44,33 @@ try
     WaitSecs(.1);
     PsychHID('KbQueueFlush');
     
-    keyIsDown = false;
-    while ~keyIsDown
-        [keyIsDown, firstPress] = PsychHID('KbQueueCheck');
-    end
+%     keyIsDown = false;
+%     while ~keyIsDown
+%         [keyIsDown, firstPress] = PsychHID('KbQueueCheck');
+%     end
     
     
     
     % Load identity gamma table for calibration:
     LoadIdentityClut(win);
     
-    measurements = [];
+    measurements = {};
+    for k = 1:length(devices)
+        measurements{k} = [];
+    end
     inputV = [0:(maxLevel+1)/(numMeasures - 1):(maxLevel+1)]; %#ok<NBRAK>
     inputV(end) = maxLevel;
     levels = inputV;
     for i = inputV
-        
         for n = 1:ngabors
             Screen('FillOval', win, i,  allRects(:,n));
         end
         Screen('Flip',win);
-        WaitSecs(0.1)
-        data = read_rgb_spotread('devices', [1,2]);
-        data = sum(data, 2);
-        measurements = [measurements data]; %#ok<AGROW>
+        WaitSecs(0.1);
+        data = read_rgb_spotread('devices', devices, 'path', path);
+        for k = 1:length(devices)
+            measurements{k} = [measurements{k}; data(k, :)]; %#ok<AGROW>
+        end
     end
     
     % Restore normal gamma table and close down:
@@ -87,9 +91,11 @@ displayRanges = [];
 displayGammas = [];
 
 
-for n = 1:2
+for n = 1:length(devices)
     %Normalize values
-    vals = measurements(n, :);
+    
+    vals = measurements{n};
+    vals = vals(:, 4)';
     displayRange = range(vals);
     displayBaseline = min(vals);
     displayRanges = [displayRanges displayRange];
