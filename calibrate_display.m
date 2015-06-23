@@ -58,7 +58,7 @@ try
     inputV(end) = maxLevel;
     levels = inputV;
     for i = inputV
-        'set'
+        
         for n = 1:ngabors
             Screen('FillOval', win, i,  allRects(:,n));
         end
