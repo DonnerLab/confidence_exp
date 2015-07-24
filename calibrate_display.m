@@ -1,7 +1,7 @@
 function [ gammaTables1, gammaTables2, displayBaselines, displayRanges, displayGammas, maxLevel, measurements, levels] = calibrate_display(numMeasures, ppd, gabor_dim_pix, varargin)
 % Adapt psychtoolbox's CalibrateMonitorPhotometer to show two stimuli at
 % different locations and to read measurements from a color hug.
-
+Screen('Preference', 'SkipSyncTests', 1); 
 xpos = default_arguments(varargin, 'xpos', [-10, 10]);
 ypos = default_arguments(varargin, 'ypos', [0, 0]);
 devices = default_arguments(varargin, 'devices', [1, 2]);
@@ -62,8 +62,9 @@ try
     inputV(end) = maxLevel;
     levels = inputV;
     for i = inputV
+        colors = [i, i];
         for n = 1:ngabors
-            Screen('FillOval', win, i,  allRects(:,n));
+            Screen('FillOval', win, colors(n),  allRects(:,n));
         end
         Screen('Flip',win);
         WaitSecs(0.1);
