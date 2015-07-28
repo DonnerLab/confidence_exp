@@ -21,7 +21,7 @@ right_sensor = 1;
 % Get luminance measurements. Make sure that colorhug 1 = left and 2 =
 % right
 [ gammaTables1, gammaTables2, displayBaselines, displayRanges, displayGammas, maxLevel, measurements, levels] = calibrate_display(...
-    numMeasures, ppd, gabor_dim_pix, 'path', '/Users/nwilming/Downloads/Argyll_V1.7.0/bin', 'devices', [1, 2]);
+numMeasures, ppd, gabor_dim_pix, 'path', '/Users/nwilming/Downloads/Argyll_V1.7.0/bin', 'devices', [1, 2]);
 rlevels = levels/max(levels);
 left = mean(measurements{left_sensor}(:,1:3), 2)';
 right = mean(measurements{right_sensor}(:,1:3), 2)';

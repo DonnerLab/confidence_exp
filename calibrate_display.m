@@ -7,7 +7,7 @@ ypos = default_arguments(varargin, 'ypos', [0, 0]);
 devices = default_arguments(varargin, 'devices', [1, 2]);
 path = default_arguments(varargin, 'path', '/home/meg/Documents/Argyll_V1.7.0/bin');
 
-screenid = max(Screen('Screens'));
+screenid = min(Screen('Screens'));
 
 psychlasterror('reset');
 try
