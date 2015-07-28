@@ -1,9 +1,11 @@
-function [measurements, levels] = test_calibration(test, numMeasures, ppd, gabor_dim_pix, signal, left, right, gamma_left, gamma_right, variable_arguments)
+function [measurements] = test_calibration(test, ppd, gabor_dim_pix, left_values, right_values, varargin)
 % Adapt psychtoolbox's CalibrateMonitorPhotometer to show two stimuli at
 % different locations and to read measurements from a color hug.
 
-xpos = default_arguments(variable_arguments, 'xpos', [-10, 10]);
-ypos = default_arguments(variable_arguments, 'ypos', [0, 0]);
+xpos = default_arguments(varargin, 'xpos', [-10, 10]);
+ypos = default_arguments(varargin, 'ypos', [0, 0]);
+devices = default_arguments(varargin, 'devices', [1, 2]);
+path = default_arguments(varargin, 'path', '/home/meg/Documents/Argyll_V1.7.0/bin');
 
 
 screenid = max(Screen('Screens'));
@@ -30,31 +32,28 @@ try
     allRects = nan(4, ngabors);
     for i = 1:ngabors
         allRects(:, i) = CenterRectOnPointd(baseRect, xpos(i), ypos(i));
-    end    
-    Screen('Flip',win);  
+    end
+    Screen('Flip',win);
     %WaitSecs(60)
-    % Load identity gamma table for calibration:    
-    measurements = [];
-    inputV = [0:(maxLevel+1)/(numMeasures - 1):(maxLevel+1)]; %#ok<NBRAK>
-    inputV(end) = maxLevel;
-    levels = [];
-    [corr_left, notmatched_left, corr_right, diff] = match_luminance(inputV/maxLevel, signal, left, right, gamma_left, gamma_right);     
+    % Load identity gamma table for calibration:
     
-    for i = 1:(find(corr_left == max(corr_left),1, 'first'))
+    measurements = {};
+    for k = 1:length(devices)
+        measurements{k} = [];
+    end
+    for i = 1:length(left_values)
         % Compute correction
-        levels = [levels, inputV(i)];
-        Screen('FillOval', win, corr_left(i)*maxLevel,  allRects(:,1));        
-        Screen('FillOval', win, corr_right(i)*maxLevel,  allRects(:,2));        
+        Screen('FillOval', win, left_values(i)*maxLevel,  allRects(:,1));
+        Screen('FillOval', win, right_values(i)*maxLevel,  allRects(:,2));
         
         Screen('Flip',win);
-        WaitSecs(0.25)
-         data = [0, 0];
+        WaitSecs(0.25);
         if ~test
-            data = read_rgb_spotread('devices', [1,2]);
-            data = sum(data, 2);
-           
+            data = read_rgb_spotread('devices', [1,2], 'path', path);
+            for k = 1:length(devices)
+                measurements{k} = [measurements{k}; data(k, :)]; %#ok<AGROW>
+            end
         end
-        measurements = [measurements data]; %#ok<AGROW>
     end
     
     % Restore normal gamma table and close down:
