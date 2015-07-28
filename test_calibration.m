@@ -1,7 +1,7 @@
 function [measurements] = test_calibration(test, ppd, gabor_dim_pix, left_values, right_values, varargin)
 % Adapt psychtoolbox's CalibrateMonitorPhotometer to show two stimuli at
 % different locations and to read measurements from a color hug.
-
+KbName('UnifyKeyNames');
 xpos = default_arguments(varargin, 'xpos', [-10, 10]);
 ypos = default_arguments(varargin, 'ypos', [0, 0]);
 devices = default_arguments(varargin, 'devices', [1, 2]);
@@ -11,6 +11,9 @@ path = default_arguments(varargin, 'path', '/home/meg/Documents/Argyll_V1.7.0/bi
 screenid = max(Screen('Screens'));
 
 psychlasterror('reset');
+keylist = ones(1, 256);
+keylist(KbName({'1!', '2@', '3#', '4$', 'ESCAPE'})) = 1;
+
 try
     
     % Open black window:
@@ -36,6 +39,7 @@ try
     Screen('Flip',win);
     %WaitSecs(60)
     % Load identity gamma table for calibration:
+    LoadIdentityClut(win);
     
     measurements = {};
     for k = 1:length(devices)
@@ -54,6 +58,17 @@ try
                 measurements{k} = [measurements{k}; data(k, :)]; %#ok<AGROW>
             end
         end
+        Screen('FillOval', win, left_values(i)*maxLevel,  allRects(:,1));
+        Screen('FillOval', win, right_values(i)*maxLevel,  allRects(:,2));
+        allRects(:,1)
+        Screen('FillOval', win, 255, [530, 950 ,550, 970] );
+        Screen('Flip',win);
+        
+        start = GetSecs;
+        FlushEvents()
+        GetChar();
+        PsychHID('KbQueueFlush');
+        
     end
     
     % Restore normal gamma table and close down:
