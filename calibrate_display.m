@@ -68,6 +68,7 @@ try
         Screen('Flip',win);
         WaitSecs(0.1);
         data = read_rgb_spotread('devices', devices, 'path', path);
+        data = read_xyz();
         for k = 1:length(devices)
             measurements{k} = [measurements{k}; data(k, :)]; %#ok<AGROW>
         end
@@ -95,7 +96,7 @@ for n = 1:length(devices)
     %Normalize values
     
     vals = measurements{n};
-    vals = vals(:, 4)';
+    vals = vals(:, 3)';
     displayRange = range(vals);
     displayBaseline = min(vals);
     displayRanges = [displayRanges displayRange];
