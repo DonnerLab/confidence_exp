@@ -6,22 +6,22 @@
 %
 % Ok, when I say luminance I mean something that is proportional to
 % luminance. The color hugs doen't actually output luminance directly
-
-
-
+ypos = [3.8, 3.8];
+xpos = [-7.5, 7.5];
 % 1st Step: Measure luminance.
-numMeasures = 20;
+numMeasures = 15;
 ppd = 40;
-gabor_dim_pix = 1000;
+gabor_dim_pix = 300;
 
 % Get the mapping of sensors to left/right correct:
-left_sensor = 2;
-right_sensor = 1;
+left_sensor = 1;
+right_sensor = 2;
 
 % Get luminance measurements. Make sure that colorhug 1 = left and 2 =
 % right
+path = '/home/meg/Documents/Argyll_V1.7.0/bin';
 [ gammaTables1, gammaTables2, displayBaselines, displayRanges, displayGammas, maxLevel, measurements, levels] = calibrate_display(...
-numMeasures, ppd, gabor_dim_pix, 'path', '/Users/nwilming/Downloads/Argyll_V1.7.0/bin', 'devices', [1, 2]);
+    numMeasures, ppd, gabor_dim_pix, 'path', path, 'devices', [1, 2], 'ypos', ypos, 'xpos', xpos);
 rlevels = levels/max(levels);
 left = mean(measurements{left_sensor}(:,1:3), 2)';
 right = mean(measurements{right_sensor}(:,1:3), 2)';
@@ -39,18 +39,19 @@ signal = left_signal;
 [matched, Idiff, Ldiff] = match_luminance(levels/max(levels), signal, left_interp, signal, right_interp);     
 
 % 4th Step: Measure if it works
-[first_corrected] = test_calibration(0, ppd, gabor_dim_pix,  levels/max(levels), matched, 'path', '/Users/nwilming/Downloads/Argyll_V1.7.0/bin', 'devices', [1,2]);
+[first_corrected] = test_calibration(0, ppd, gabor_dim_pix,  levels/max(levels), matched, 'path', path, 'devices', [1,2], 'ypos', ypos, 'xpos', xpos);
 
 % 5th Step: Compare
 coleft = mean(first_corrected{left_sensor}(:,1:3), 2)';
 coright = mean(first_corrected{right_sensor}(:,1:3), 2)';
 figure()
-plot(coleft)
+plot(coleft, 'b')
 hold all
-plot(coright)
-plot(left, '--')
+plot(left, 'b--')
+plot(coright, 'r')
 hold all
-plot(right, '--')
+plot(right, 'r--')
+legend('Matched left', 'Non matched left', 'Matched right', 'Non matched right')
 
 %% Now let's do the same with gamma correction.  
 % We need to equalize differences between T(T^-1(X)) = Lum
@@ -107,13 +108,19 @@ xlabel('Gray level')
 ylabel('Luminance or gamma corr. gray')
 
 % Measure if it works
-[corrected] = test_calibration(0, ppd, gabor_dim_pix,  levels_left, levels_matched, 'path', '/Users/nwilming/Downloads/Argyll_V1.7.0/bin', 'devices', [1,2]);
-
+pause(15)
+[corrected_not_measured] = test_calibration(0, ppd, gabor_dim_pix,  levels_left, levels_matched, 'path', path, 'devices', [1,2], 'ypos', ypos, 'xpos', xpos);
+pause(15)
+[corrected_non_matched_not_measured] = test_calibration(0, ppd, gabor_dim_pix,  levels_left, levels_left, 'path', path, 'devices', [1,2], 'ypos', ypos, 'xpos', xpos);
 % Compare
 cleft = mean(corrected{left_sensor}(:,1:3), 2)';
 cright = mean(corrected{right_sensor}(:,1:3), 2)';
+nccleft = mean(corrected_non_matched{left_sensor}(:,1:3), 2)';
+nccright = mean(corrected_non_matched{right_sensor}(:,1:3), 2)';
 figure()
-plot(rlevels, cleft)
+plot(rlevels, cleft, 'r')
 hold all
-plot(rlevels, cright)
-legend('left', 'right')
+plot(rlevels, nccleft, 'r--')
+plot(rlevels, cright, 'b')
+plot(rlevels, nccright, 'b--')
+legend('Matched left', 'Non matched left', 'Matched right', 'Non matched right')
