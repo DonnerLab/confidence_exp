@@ -8,8 +8,7 @@ white = WhiteIndex(screenNumber);
 black = BlackIndex(screenNumber);
 grey = white / 2;
 % Open the screen
-Screen('Preference', 'SkipSyncTests', 1);
-[window, windowRect] = Screen('OpenWindow', screenNumber, grey);
+t[window, windowRect] = Screen('OpenWindow', screenNumber, grey);
 options.window_rect = windowRect;
 % You definetly want to set a custom look up table.
 % gamma is the look up table
