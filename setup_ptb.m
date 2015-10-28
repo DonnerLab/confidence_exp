@@ -8,8 +8,13 @@ white = WhiteIndex(screenNumber);
 black = BlackIndex(screenNumber);
 grey = white / 2;
 % Open the screen
-t[window, windowRect] = Screen('OpenWindow', screenNumber, grey);
+[window, windowRect] = Screen('OpenWindow', screenNumber, grey);
+%[window, windowRect] = Screen('OpenWindow', screenNumber, grey, [0, 0, 1000, 1000]);
 options.window_rect = windowRect;
+% Switch color specification to use the 0.0 - 1.0 range instead of the 0 -
+% 255 range. This is more natural for these kind of stimuli:
+Screen('ColorRange', window, 1);
+
 % You definetly want to set a custom look up table.
 % gamma is the look up table
 %if exist('gamma_lut', 'var') == 0 && length(gamma_lut) == 256
@@ -25,8 +30,8 @@ HideCursor(screenNumber)
 Screen('Flip', window);
 
 % Make gabortexture
-gabortex = make_gabor(window, 'gabor_dim_pix', options.gabor_dim_pix);
-
+%gabortex = make_gabor(window, 'gabor_dim_pix', options.gabor_dim_pix);
+ringtex = make_circular_grating(window, options.ringwidth);
 % make Kb Queue
 keyList = zeros(1, 256); keyList(KbName({'1!', '2@', '3#', '4$', 'ESCAPE','SPACE', 'LeftArrow', 'RightArrow',...
     'a', 's', 'd', 'f'})) = 1; % only listen to those keys!
@@ -44,13 +49,13 @@ devices = PsychPortAudio('GetDevices');
 
 % UA-25 is the sound that's played in the subject's earbuds
 for i = 1:length(devices)
-    if strcmp(devices(i).DeviceName, 'OUT (UA-25)')
+    if strcmp(devices(i).DeviceName,'UA-25: USB Audio (hw:1,0)')
         break
     end
 end
-
+i = 1;
 % check that we found the low-latency audio port
-assert(strfind(devices(i).DeviceName, 'UA-25') > 0, 'could not detect the right audio port! aborting')
+%assert(strfind(devices(i).DeviceName, 'UA-25') > 0, 'could not detect the right audio port! aborting')
 audio = [];
 %i = 10; % for the EEG lab
 

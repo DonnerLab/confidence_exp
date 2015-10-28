@@ -8,13 +8,12 @@ rng('shuffle')
 setup;
 
 %% Setup the ParPort
-trigger = setup_trigger;
-setup_parport;
+trigger_enc = setup_trigger;
+%setup_parport;
 
 %% Parameters that control appearance of the gabors that are constant over
 % trials
-opts = {'sigma', options.gabor_dim_pix/6,...
-    'num_cycles', 5,...
+opts = {'num_cycles', 5,...
     'duration', .1,...
     'ppd', 31.9,... % for MEG display at 65cm viewing distance
     'xpos', [-10, 10],...
@@ -24,7 +23,7 @@ opts = {'sigma', options.gabor_dim_pix/6,...
 
 try
     %% Ask for some subject details and load old QUEST parameters
-    subject.initials = input('Initials? ', 's');
+    subject.initials = 'NW' % input('Initials? ', 's');
     options.datadir = fullfile(options.datadir, subject.initials);
     [~, ~, ~] = mkdir(options.datadir);
     quest_file = fullfile(options.datadir, 'quest_results.mat');
@@ -39,12 +38,12 @@ try
         end
     end
     
-    fprintf('QUEST Parameters\n----------------\nThreshold Guess: %1.4f\nSigma Guess: %1.4f\n',...
-        quest.threshold_guess, quest.threshold_guess_sigma)
-    if ~strcmp(input('OK? [y/n] ', 's'), 'y')
-        throw(MException('EXP:Quit', 'User request quit'));
-        
-    end
+%     fprintf('QUEST Parameters\n----------------\nThreshold Guess: %1.4f\nSigma Guess: %1.4f\n',...
+%         quest.threshold_guess, quest.threshold_guess_sigma)
+%     if ~strcmp(input('OK? [y/n] ', 's'), 'y')
+%         throw(MException('EXP:Quit', 'User request quit'));
+%         
+%     end
     
     %% Configure Psychtoolbox
     setup_ptb;           
@@ -69,7 +68,7 @@ try
     % A structure to save results.
     results = struct('response', [], 'side', [], 'choice_rt', [], 'correct', [],...
         'contrast', [], 'contrast_left', [], 'contrast_right', [],...
-        'confidence', [], 'confidence_rt', [], 'repeat', [], 'repeated_stim', [], 'session', [], 'random_offset', []);
+        'confidence', [], 'repeat', [], 'repeated_stim', [], 'session', [], 'random_offset', []);
     
     % Sometimes we want to repeat the same contrast fluctuations, load them
     % here. You also need to set the repeat interval manually. The repeat
@@ -122,16 +121,14 @@ try
             end
             
             % Set options that are valid only for this trial.
-            trial_options = [opts, {'contrast_left', contrast_left,...
-                'contrast_right', contrast_right,...
-                'gabor_angle', rand*180,...
+            trial_options = [opts, {'contrast_probe', contrast_left,...
+                'contrast_ref', 0.5,...
                 'baseline_delay', 1 + rand*0.5,...
-                'confidence_delay', 0.5 + rand*1,...
                 'feedback_delay', 0.5 + rand*1,...
                 'rest_delay', 0.5}];
             
-            [correct, response, confidence, rt_choice, rt_conf, timing] = one_trial(window, options.window_rect,...
-                screenNumber, side, gabortex, options.gabor_dim_pix, audio,  trigger, trial_options);
+            [correct, response, confidence, rt_choice, timing] = one_trial(window, options.window_rect,...
+                screenNumber, side, ringtex, audio,  trigger_enc, trial_options);
             
             timings{trial} = timing;
             if ~isnan(correct) && ~repeat_trial
@@ -139,7 +136,7 @@ try
             end
             results(trial) = struct('response', response, 'side', side, 'choice_rt', rt_choice, 'correct', correct,...
                 'contrast', contrast, 'contrast_left', contrast_left, 'contrast_right', contrast_right,...
-                'confidence', confidence, 'confidence_rt', rt_conf, 'repeat', repeat_trial, 'repeated_stim', repeated_stim,...
+                'confidence', confidence, 'repeat', repeat_trial, 'repeated_stim', repeated_stim,...
                 'session', session_identifier, 'random_offset', random_offset);
             Eyelink('message', 'TRIALEND %d', trial);
         catch ME

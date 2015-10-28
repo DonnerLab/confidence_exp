@@ -52,7 +52,7 @@ if nargin < 1 || isempty(ringtype)
 end
 
 % Choose screen with maximum id - the secondary display:
-screenid = max(Screen('Screens'));
+screenid = 0;
 
 % Open a fullscreen onscreen window on that display, choose a background
 % color of 128 = gray with 50% max intensity:
@@ -68,10 +68,10 @@ Screen('ColorRange', win, 1);
 
 % Load the 'ExpandingRingsShader' fragment program from file, compile it,
 % return a handle to it:
-rshader = ['/Users/nwilming/u/psychtoolbox/Psychtoolbox/' 'PsychDemos/ExpandingRingsShader.vert.txt'];
+rshader = fullfile(pwd, 'ExpandingRingsShader.vert.txt');
 
 
-expandingRingShader = LoadGLSLProgramFromFiles({ rshader, ['/Users/nwilming/u/psychtoolbox/Psychtoolbox/' 'PsychDemos/ExpandingSinesShader.frag.txt'] }, 1);
+expandingRingShader = LoadGLSLProgramFromFiles({ rshader, fullfile(pwd, 'ExpandingSinesShader.frag.txt') }, 1);
 % Width of a single ring (radius) / Period of a single color sine wave in pixels:
 ringwidth = 50;
 

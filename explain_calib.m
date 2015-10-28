@@ -1,4 +1,4 @@
-%% A script to explain how the colorhug calibration and matching works.
+ls%% A script to explain how the colorhug calibration and matching works.
 %
 % This is a demonstration of how to equalize luminance between to patches
 % on a screen when the luminance of each patch can be measured with a color

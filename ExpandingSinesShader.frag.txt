@@ -36,7 +36,7 @@ void main()
     /* if (d > Radius) discard;
      if (d < Annulus) discard; */
 
-    float alpha = exp(-pow((d-250.),2.)/pow(2.*50.,2.));
+    float alpha = exp(-pow((d-150.),2.)/pow(2.*25.,2.));
 
     /* Convert distance from units of pixels into units of ringwidths, apply shift offset: */
     d = 0.5 * (1.0 + sin((d - Shift) / RingWidth * twopi));

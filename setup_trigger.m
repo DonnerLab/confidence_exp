@@ -13,18 +13,15 @@ function trigger = setup_trigger()
 % Stim. - strong left   41	00110001
 % Stim. - strong right  40	00110000
 %
-% Response - left       31	00100001
-% Response - right  	30	00100000
 %
-% Confidence - +2       24	00100001
-% Confidence - +1   	23	00100000
-% Confidence - -1       22	00100001
-% Confidence - -2   	21	00100000
+% Left Confidence  - +2 24	00100001
+% Left Confidence  - +1	23	00100000
+% Right Confidence - -1 22	00100001
+% Right Confidence - -2 21	00100000
 %
 % Feedback - correct	11	00010001
 % Feedback - incorrect	10	00010000
 
-trigger.address = hex2dec('378');
 trigger.zero = 0;
 trigger.width = 0.005; %1 ms trigger signal
 
@@ -41,13 +38,11 @@ trigger.feedback_start = 46;
 trigger.stim_strong_left = 41;
 trigger.stim_strong_right = 40;
 
-trigger.resp_left = 31;
-trigger.resp_right = 30;
 
-trigger.conf_very_high = 24;
-trigger.conf_high = 23;
-trigger.conf_low = 22;
-trigger.conf_very_low = 21;
+trigger.left_conf_high = 24;
+trigger.left_conf_low = 23;
+trigger.right_conf_low = 22;
+trigger.right_conf_high = 21;
 
 trigger.feedback_correct    = 11;
 trigger.feedback_incorrect  = 10;
