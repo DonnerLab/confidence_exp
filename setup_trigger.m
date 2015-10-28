@@ -39,10 +39,10 @@ trigger.stim_strong_left = 41;
 trigger.stim_strong_right = 40;
 
 
-trigger.left_conf_high = 24;
-trigger.left_conf_low = 23;
-trigger.right_conf_low = 22;
-trigger.right_conf_high = 21;
+trigger.first_conf_high = 24;
+trigger.first_conf_low = 23;
+trigger.second_conf_low = 22;
+trigger.second_conf_high = 21;
 
 trigger.feedback_correct    = 11;
 trigger.feedback_incorrect  = 10;

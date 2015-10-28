@@ -15,13 +15,17 @@
 attribute vec4 modulateColor;
 attribute vec4 auxParameters0;
 attribute vec4 auxParameters1;
+attribute vec4 auxParameters2;
 
 varying float RingWidth;
 varying float Radius;
 varying float Shift;
+varying float Sigma;
 varying float Annulus;
+varying float Cutoff;
 varying vec4  firstColor;
 varying vec4  secondColor;
+
 
 void main()
 {
@@ -38,4 +42,6 @@ void main()
     RingWidth = auxParameters1[1];
     Radius    = auxParameters1[2];
     Annulus   = auxParameters1[3];
+    Sigma     = auxParameters2[0];
+    Cutoff    = auxParameters2[1];
 }

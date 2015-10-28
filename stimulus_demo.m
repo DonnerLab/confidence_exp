@@ -1,4 +1,4 @@
-function ExpandingRingsDemo(ringtype)
+function stimulus_demo(ringtype)
 % ExpandingRingsDemo([ringtype=0]) -- Generate an "expanding rings"
 % stimulus by use of GLSL shaders and Psychtoolbox procedural textures.
 %
@@ -117,12 +117,17 @@ vbl = Screen('Flip', win);
 ts = vbl;
 
 % Animation loop: Run until keypress:
+contrast = 0.0;
 while ~KbCheck
     % Increase shift and radius of stimulus:
     shiftvalue = shiftvalue + 1;
     radius = 500;
     count = count + 1;
-    
+    if mod(shiftvalue, 500) == 0
+         contrast = mod(contrast  + 0.0039, 1)
+         
+    end
+    [firstColor, secondColor] = contrast_colors(mod(contrast,0.5), 0.5);
     % Draw the stimulus with its current parameter settings. We simply draw
     % the procedural texture as any other texture via 'DrawTexture'. We
     % leave all draw settings to their defaults, except the base drawing
@@ -137,7 +142,7 @@ while ~KbCheck
     % rings.
     Screen('BlendFunction', win, 'GL_ONE', 'GL_ZERO');
     Screen('DrawTexture', win, ringtex, [], [], [], [], [], firstColor, [], [],...
-        [secondColor(1), secondColor(2), secondColor(3), secondColor(4), shiftvalue, ringwidth, radius, 50]);
+        [secondColor(1), secondColor(2), secondColor(3), secondColor(4), shiftvalue, ringwidth, radius, 75, 150, 3.5, 0, 0]);
     
     % Request stimulus onset at next video refresh:
     vbl = Screen('Flip', win, vbl + ifi/2);

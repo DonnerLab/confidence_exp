@@ -33,9 +33,13 @@ function [correct, response, confidence, rt_choice, timing] = one_trial(window, 
 %% Process variable input stuff
 ref_duration =  default_arguments(variable_arguments, 'ref_duration', .400);
 radius = default_arguments(variable_arguments, 'radius', 150);
+inner_annulus = default_arguments(variable_arguments, 'inner_annulus', 5);
+ringwidth = default_arguments(variable_arguments, 'ringwidth', 25);
+sigma = default_arguments(variable_arguments, 'sigma', 2*estimate_pixels_per_degree(screen_number, 60));
+cutoff = default_arguments(variable_arguments, 'cutoff', 2*estimate_pixels_per_degree(screen_number, 3.5));
+
 contrast_reference = default_arguments(variable_arguments, 'contrast_reference', 0.25);
 contrast_probe = default_arguments(variable_arguments, 'contrast_probe', [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]/10.);
-ringwidth = default_arguments(variable_arguments, 'ringwidth', 25);
 driftspeed = default_arguments(variable_arguments, 'driftspeed', 1);
 ppd = default_arguments(variable_arguments, 'ppd', estimate_pixels_per_degree(screen_number, 60));
 duration = default_arguments(variable_arguments, 'duration', .5);
@@ -58,10 +62,10 @@ timing = struct();
 
 
 
-left_conf_high = 'd';
-left_conf_low = 'f';
-right_conf_low = 'g';
-right_conf_high = 'h';
+first_conf_high = 's';
+first_conf_low = 'd';
+second_conf_low = 'j';
+second_conf_high = 'k';
 quit = 'ESCAPE';
 
 black = BlackIndex(screen_number);
@@ -95,7 +99,7 @@ PsychHID('KbQueueFlush');
 shiftvalue = 0;
 for frame = 1:(ref_duration/ifi)
     Screen('DrawTexture', window, ringtex, [], [], [], [], [], low, [], [],...
-        [high(1), high(2), high(3), high(4), shiftvalue, ringwidth, radius, 50]);
+        [high(1), high(2), high(3), high(4), shiftvalue, ringwidth, radius, inner_annulus, sigma, cutoff, 0, 0]);
     vbl = Screen('Flip', window, vbl + (waitframes) * ifi);
     waitframes = 1;
     shiftvalue = shiftvalue+driftspeed;
@@ -120,7 +124,7 @@ while ~((GetSecs - stimulus_onset) >= (length(contrast_probe)-1)*duration-1*ifi)
     %Screen('BlendFunction', window, 'GL_SRC_ALPHA', 'GL_ONE_MINUS_SRC_ALPHA');
 
     Screen('DrawTexture', window, ringtex, [], [], [], [], [], low, [], [],...
-        [high(1), high(2), high(3), high(4), shiftvalue, ringwidth, radius, 50]);
+        [high(1), high(2), high(3), high(4), shiftvalue, ringwidth, radius, inner_annulus, sigma, cutoff, 0, 0]);
     shiftvalue = shiftvalue+driftspeed;
     % Change the blend function to draw an antialiased fixation point
     % in the centre of the array
@@ -131,6 +135,7 @@ while ~((GetSecs - stimulus_onset) >= (length(contrast_probe)-1)*duration-1*ifi)
     
     % Flip our drawing to the screen
     vbl = Screen('Flip', window, vbl + (waitframes-.5) * ifi);
+    PsychHID('KbQueueFlush');
     if framenum == 1 && cnt == 1
         Eyelink('message', 'SYNCTIME');
         trigger(trigger_enc.stim_onset);
@@ -147,7 +152,6 @@ while ~((GetSecs - stimulus_onset) >= (length(contrast_probe)-1)*duration-1*ifi)
         start = GetSecs;
     end
     if (elapsed-start) > duration-.5*ifi
-        elapsed-start
         start = GetSecs;
         [low, high] = contrast_colors(contrast_probe(cnt), 0.5);
         cnt = cnt+1;
@@ -165,7 +169,6 @@ target = (waitframes - 0.5) * ifi;
 %     trigger(trigger_enc.zero);
 %     target = decision_delay -0.01 - 0.5 * ifi;
 % end
-PsychHID('KbQueueFlush');
 % in the centre of the array
 Screen('BlendFunction', window, 'GL_SRC_ALPHA', 'GL_ONE_MINUS_SRC_ALPHA');
 timing.animation = dynamic;
@@ -183,11 +186,11 @@ rt_choice = nan;
 key_pressed = false;
 error = false;
 response = nan;
-while (GetSecs-start) < 2
+while (GetSecs-start) < 20
     [keyIsDown, firstPress] = PsychHID('KbQueueCheck');
-    RT = GetSecs();
     if keyIsDown
-        keys = KbName(firstPress);
+         RT = GetSecs()
+        keys = KbName(firstPress)
         if iscell(keys)
             error = true;
             break
@@ -195,32 +198,34 @@ while (GetSecs-start) < 2
         switch keys
             case quit
                 throw(MException('EXP:Quit', 'User request quit'));
-            case left_conf_high
-                Eyelink('message', 'decision left conf high');
-                trigger(trigger_enc.left_conf_high);
-                response = 1;
-                confidence = 2;
-            case left_conf_low
-                Eyelink('message', 'decision left conf low');
-                trigger(trigger_enc.left_conf_high);
-                response = 1;  
-                confidence = 1;
-            case right_conf_low
-                Eyelink('message', 'decision right conf low');
-                trigger(trigger_enc.right_conf_high);
-                response = -1;                
-                confidence = 1;
-            case right_conf_high
-                Eyelink('message', 'decision right conf high');
-                trigger(trigger_enc.right_conf_high);
+            case first_conf_high
+                Eyelink('message', 'decision first conf high');
+                trigger(trigger_enc.first_conf_high);
                 response = -1;
+                confidence = 2;
+            case first_conf_low
+                Eyelink('message', 'decision first conf low');
+                trigger(trigger_enc.first_conf_high);
+                response = -1;  
+                confidence = 1;
+            case second_conf_low
+                Eyelink('message', 'decision second conf low');
+                trigger(trigger_enc.second_conf_high);
+                response = 1;                
+                confidence = 1;
+            case second_conf_high
+                Eyelink('message', 'decision second conf high');
+                trigger(trigger_enc.second_conf_high);
+                response = 1;
                 confidence = 2;                
         end
         if ~isnan(response)
             if correct_location == response
                 correct = 1;
+                fprintf('Correct')
             else
                 correct = 0;
+                fprintf('Wrong')
             end
             rt_choice = RT-start;
             key_pressed = true;
@@ -230,8 +235,7 @@ while (GetSecs-start) < 2
 end
 
 
-Screen('DrawDots', window, [xCenter; yCenter], 10, black, [], 1);
-vbl = Screen('Flip', window);
+
 if ~key_pressed || error
     trigger(trigger_enc.no_decisions);
     Eyelink('message', 'decision none');

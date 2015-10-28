@@ -15,7 +15,7 @@ trigger_enc = setup_trigger;
 % trials
 opts = {'num_cycles', 5,...
     'duration', .1,...
-    'ppd', 31.9,... % for MEG display at 65cm viewing distance
+    'ppd', estimate_pixels_per_degree(0, 65),...%31.9,... % for MEG display at 65cm viewing distance
     'xpos', [-10, 10],...
     'ypos', [6.5, 6.5]}; % Position Gabors in the lower hemifield to get activation in the dorsal pathaway
 
@@ -38,16 +38,16 @@ try
         end
     end
     
-%     fprintf('QUEST Parameters\n----------------\nThreshold Guess: %1.4f\nSigma Guess: %1.4f\n',...
-%         quest.threshold_guess, quest.threshold_guess_sigma)
-%     if ~strcmp(input('OK? [y/n] ', 's'), 'y')
-%         throw(MException('EXP:Quit', 'User request quit'));
-%         
-%     end
+    %     fprintf('QUEST Parameters\n----------------\nThreshold Guess: %1.4f\nSigma Guess: %1.4f\n',...
+    %         quest.threshold_guess, quest.threshold_guess_sigma)
+    %     if ~strcmp(input('OK? [y/n] ', 's'), 'y')
+    %         throw(MException('EXP:Quit', 'User request quit'));
+    %
+    %     end
     
     %% Configure Psychtoolbox
-    setup_ptb;           
-        
+    setup_ptb;
+    
     %% Set up Eye Tracker
     [el, options] = ELconfig(window, subject, options);
     
@@ -59,7 +59,7 @@ try
     % record a few samples before we actually start displaying
     WaitSecs(0.1);
     % mark zero-plot time in data file
-    Eyelink('message', 'Start recording Eyelink');        
+    Eyelink('message', 'Start recording Eyelink');
     
     %% Set up QUEST
     q = QuestCreate(quest.threshold_guess, quest.threshold_guess_sigma, quest.pThreshold, quest.beta, quest.delta, quest.gamma);
@@ -67,7 +67,7 @@ try
     
     % A structure to save results.
     results = struct('response', [], 'side', [], 'choice_rt', [], 'correct', [],...
-        'contrast', [], 'contrast_left', [], 'contrast_right', [],...
+        'contrast', [], 'contrast_probe', [], 'contrast_ref', [],...
         'confidence', [], 'repeat', [], 'repeated_stim', [], 'session', [], 'random_offset', []);
     
     % Sometimes we want to repeat the same contrast fluctuations, load them
@@ -96,36 +96,25 @@ try
             repeat_trial = false;
             repeated_stim = nan;
             
-            if options.repeat_contrast_levels && mod(trial, repeat_interval)==0             
-                repeat_trial = true;
-                repeated_stim = mod(repeat_counter-1, length(repeat_levels))+1;
-                contrast_a = repeat_levels(repeated_stim).contrast_a;
-                contrast_b = repeat_levels(repeated_stim).contrast_b;
-                contrast = repeat_levels(repeated_stim).contrast;
-                repeat_counter = repeat_counter+1;
-            else                
-                % Sample contrasts.
-                contrast = min(1, max(0, (QuestQuantile(q, 0.5))));
-                random_offset = (rand-0.5)*.5;
-                [contrast_a, contrast_b] = sample_contrast(contrast, options.noise_sigma, options.baseline_contrast+random_offset);
-                
-            end
+            % Sample contrasts.
+            contrast = min(1, max(0, (QuestQuantile(q, 0.5))));
+            random_offset = (rand-0.5)*.5;
             side = randsample([1,-1], 1);
-            
-            if side == -1
-                contrast_left = contrast_a;
-                contrast_right = contrast_b;
-            else
-                contrast_left = contrast_b;
-                contrast_right = contrast_a;
-            end
+            [side, contrast_fluctuations] = sample_contrast(side, contrast, options.noise_sigma, options.baseline_contrast+random_offset);
+            [side mean(contrast_fluctuations)]
             
             % Set options that are valid only for this trial.
-            trial_options = [opts, {'contrast_probe', contrast_left,...
-                'contrast_ref', 0.5,...
+            trial_options = [opts, {...
+                'contrast_probe', contrast_fluctuations,...
+                'contrast_ref', options.baseline_contrast+random_offset,...
                 'baseline_delay', 1 + rand*0.5,...
                 'feedback_delay', 0.5 + rand*1,...
-                'rest_delay', 0.5}];
+                'rest_delay', 0.5,...
+                'ringwidth', options.ringwidth,...
+                'radius', options.radius,...
+                'inner_annulus', options.inner_annulus,...
+                'sigma', options.sigma,...
+                'cutoff', options.cutoff}];
             
             [correct, response, confidence, rt_choice, timing] = one_trial(window, options.window_rect,...
                 screenNumber, side, ringtex, audio,  trigger_enc, trial_options);
@@ -135,7 +124,7 @@ try
                 q = QuestUpdate(q, contrast, correct);
             end
             results(trial) = struct('response', response, 'side', side, 'choice_rt', rt_choice, 'correct', correct,...
-                'contrast', contrast, 'contrast_left', contrast_left, 'contrast_right', contrast_right,...
+                'contrast', contrast, 'contrast_probe', contrast_fluctuations, 'contrast_ref', options.baseline_contrast+random_offset,...
                 'confidence', confidence, 'repeat', repeat_trial, 'repeated_stim', repeated_stim,...
                 'session', session_identifier, 'random_offset', random_offset);
             Eyelink('message', 'TRIALEND %d', trial);
@@ -151,9 +140,9 @@ catch ME
     if (strcmp(ME.identifier,'EXP:Quit'))
         return
     else
-        %LoadIdentityClut(window);        
+        %LoadIdentityClut(window);
         %Eyelink('StopRecording');
-
+        
         disp(getReport(ME,'extended'));
         rethrow(ME);
     end
@@ -166,7 +155,7 @@ eyefilename   = fullfile(options.datadir, sprintf('%s_%s.edf', subject.initials,
 Eyelink('CloseFile');
 Eyelink('WaitForModeReady', 500);
 try
-    status = Eyelink('ReceiveFile', options.edfFile, eyefilename); 
+    status = Eyelink('ReceiveFile', options.edfFile, eyefilename);
     disp(['File ' eyefilename ' saved to disk']);
 catch
     warning(['File ' eyefilename ' not saved to disk']);

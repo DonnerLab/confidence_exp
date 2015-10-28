@@ -1,8 +1,15 @@
-function [small, large] = sample_contrast(contrast, sigma, baseline_contrast)
-large = [0,0];
-small = [0, 1];
-while mean(large) < mean(small)
-    large = randn(1,10)*sigma + contrast + baseline_contrast ;
-    small = randn(1,10)*sigma + baseline_contrast;
+function [up, large] = sample_contrast(up, contrast, sigma, baseline_contrast)
+%% 
+% up =  1 = larger than baseline contrast
+% up = -1 = smaller than baseline contrast
+large = randn(1,10)*sigma + up*contrast + baseline_contrast;
+
+if mean(large) > baseline_contrast && up == -1
+    up = 1;
+elseif mean(large) < baseline_contrast && up == 1
+    up = -1;
 end
+    
+    
 end
+
