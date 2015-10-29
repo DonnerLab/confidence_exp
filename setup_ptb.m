@@ -33,8 +33,8 @@ Screen('Flip', window);
 %gabortex = make_gabor(window, 'gabor_dim_pix', options.gabor_dim_pix);
 ringtex = make_circular_grating(window, options.ringwidth);
 % make Kb Queue
-keyList = zeros(1, 256); keyList(KbName({'1!', '2@', '3#', '4$', 'ESCAPE','SPACE', 'LeftArrow', 'RightArrow',...
-    's', 'd', 'j', 'k'})) = 1; % only listen to those keys!
+keyList = zeros(1, 256); keyList(KbName({'ESCAPE','SPACE', 'LeftArrow', 'RightArrow',...
+    '1', '2', '3', '4', 'b', 'g', 'y', 'r'})) = 1; % only listen to those keys!
 % first four are the buttons in mode 001, escape and space are for
 % the experimenter, rest is for esting
 PsychHID('KbQueueCreate', [], keyList);
@@ -49,7 +49,7 @@ devices = PsychPortAudio('GetDevices');
 
 % UA-25 is the sound that's played in the subject's earbuds
 for i = 1:length(devices)
-    if strcmp(devices(i).DeviceName,'Built-in Output') %UA-25: USB Audio (hw:1,0)')
+    if strcmp(devices(i).DeviceName,'front') %UA-25: USB Audio (hw:1,0)')
         break
     end
 end

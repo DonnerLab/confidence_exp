@@ -19,26 +19,26 @@ function trigger(number)
 % if you want pp to be as fast as possible, supply both the port
 % and addr, and set slowChecks to false.
 %--------------------------------------------------------------------------
-% HARD CODED PORT NUMBER (linux pc NBP eeg lab)
-% bstr = dec2bin(number, 8);
-% pins = find(str2num(reshape(bstr',[],1))');
-% 
-% 
-% % check if input is valid (throw error/abort if not)
-% if isempty(pins)
-%     error('Error using trigger: no pins selected.')
-% else
-%     % create [true] & [false] output array same length as input
-%     onOut    = repmat([true],1,length(pins)); % to turn pins on
-%     resetOut = repmat([false],1,length(pins));% to turn pins off
-% end
-% 
-% % send specified trigger
-% vals = pp(uint8(pins),onOut,false,uint8(0));
-% 
-% WaitSecs(0.001);
-% 
-% % reset pins to zero
-% vals = pp(uint8(pins),resetOut,false,uint8(0));
+
+bstr = dec2bin(number, 8);
+pins = find(str2num(reshape(bstr',[],1))');
+
+
+% check if input is valid (throw error/abort if not)
+if isempty(pins)
+    error('Error using trigger: no pins selected.')
+else
+    % create [true] & [false] output array same length as input
+    onOut    = repmat([true],1,length(pins)); % to turn pins on
+    resetOut = repmat([false],1,length(pins));% to turn pins off
+end
+
+% send specified trigger
+vals = pp(uint8(pins),onOut,false,uint8(0));
+
+WaitSecs(0.001);
+
+% reset pins to zero
+vals = pp(uint8(pins),resetOut,false,uint8(0));
 
 end

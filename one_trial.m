@@ -63,10 +63,10 @@ timing = struct();
 
 
 
-first_conf_high = 's';
-first_conf_low = 'd';
-second_conf_low = 'j';
-second_conf_high = 'k';
+first_conf_high = 'b';
+first_conf_low = 'y';
+second_conf_low = 'g';
+second_conf_high = 'r';
 quit = 'ESCAPE';
 
 black = BlackIndex(screen_number);
@@ -195,22 +195,22 @@ while (GetSecs-start) < 2
         switch keys
             case quit
                 throw(MException('EXP:Quit', 'User request quit'));
-            case first_conf_high
+            case {first_conf_high, '1'}
                 Eyelink('message', 'decision first conf high');
                 trigger(trigger_enc.first_conf_high);
                 response = -1;
                 confidence = 2;
-            case first_conf_low
+            case {first_conf_low, '2'}
                 Eyelink('message', 'decision first conf low');
                 trigger(trigger_enc.first_conf_high);
                 response = -1;  
                 confidence = 1;
-            case second_conf_low
+            case {second_conf_low, '3'}
                 Eyelink('message', 'decision second conf low');
                 trigger(trigger_enc.second_conf_high);
                 response = 1;                
                 confidence = 1;
-            case second_conf_high
+            case {second_conf_high, '4'}
                 Eyelink('message', 'decision second conf high');
                 trigger(trigger_enc.second_conf_high);
                 response = 1;

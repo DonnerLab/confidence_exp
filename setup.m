@@ -1,6 +1,6 @@
 % Setup various options
 
-options.num_trials = 2; % How many trials?
+options.num_trials = 100; % How many trials?
 options.datadir = 'data/';
 window = false;
 

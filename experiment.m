@@ -102,7 +102,7 @@ try
             noise_sigma = randsample(options.noise_sigmas, 1);
             [side, contrast_fluctuations] = sample_contrast(side, contrast, noise_sigma, options.baseline_contrast);
             [side mean(contrast_fluctuations)]
-            expand = randsample([-1=], 1);
+            expand = randsample([-1, 1], 1);
             % Set options that are valid only for this trial.
             trial_options = [opts, {...
                 'contrast_probe', contrast_fluctuations,...
