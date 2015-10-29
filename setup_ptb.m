@@ -9,7 +9,7 @@ black = BlackIndex(screenNumber);
 grey = white / 2;
 % Open the screen
 [window, windowRect] = Screen('OpenWindow', screenNumber, grey);
-%[window, windowRect] = Screen('OpenWindow', screenNumber, grey, [0, 0, 1000, 1000]);
+%[window, windowRect] = Screen('OpenWindow', screenNumber, grey, [0, 0, 400, 400]);
 options.window_rect = windowRect;
 % Switch color specification to use the 0.0 - 1.0 range instead of the 0 -
 % 255 range. This is more natural for these kind of stimuli:
@@ -17,10 +17,11 @@ Screen('ColorRange', window, 1);
 
 % You definetly want to set a custom look up table.
 % gamma is the look up table
-%if exist('gamma_lut', 'var') == 0 && length(gamma_lut) == 256
-%    throw(MException('EXP:Quit', 'variable gamma not in workspace; no gamma lut loaded'));
-%end
-%Screen('LoadNormalizedGammaTable', window, gamma_lut*[1 1 1]);
+load pojector_calib_20151029.mat
+if exist('gammaTables1', 'var') == 0 && length(gammaTables1) == 256
+    throw(MException('EXP:Quit', 'variable gamma not in workspace; no gamma lut loaded'));
+end
+old_gamma_table = Screen('LoadNormalizedGammaTable', window, gammaTables1);
 
 % Set the display parameters 'frameRate' and 'resolution'
 options.frameDur     = Screen('GetFlipInterval',window); %duration of one frame
@@ -32,15 +33,22 @@ Screen('Flip', window);
 % Make gabortexture
 %gabortex = make_gabor(window, 'gabor_dim_pix', options.gabor_dim_pix);
 ringtex = make_circular_grating(window, options.ringwidth);
-% make Kb Queue
-keyList = zeros(1, 256); keyList(KbName({'ESCAPE','SPACE', 'LeftArrow', 'RightArrow',...
-    '1', '2', '3', '4', 'b', 'g', 'y', 'r'})) = 1; % only listen to those keys!
+% make Kb Queue: Need to specify the device to query button box
+% Find the keyboard + MEG buttons. 
+[idx, names, all] = GetKeyboardIndices();
+options.kbqdev = [idx(strcmpi(names, 'ATEN USB KVMP w. OSD')), idx(strcmpi(names, 'Current Designs, Inc. 932'))];
+
+keyList = zeros(1, 256); 
+keyList(KbName({'ESCAPE','SPACE', 'LeftArrow', 'RightArrow',...
+    '1', '2', '3', '4', 'b', 'g', 'y', 'r', '1!', '2@', '3#', '4$'})) = 1; % only listen to those keys!
 % first four are the buttons in mode 001, escape and space are for
 % the experimenter, rest is for esting
-PsychHID('KbQueueCreate', [], keyList);
-PsychHID('KbQueueStart');
-WaitSecs(.1);
-PsychHID('KbQueueFlush');
+for kbqdev = options.kbqdev
+    PsychHID('KbQueueCreate', kbqdev, keyList);
+    PsychHID('KbQueueStart', kbqdev);
+    WaitSecs(.1);
+    PsychHID('KbQueueFlush', kbqdev);
+end
 
 %% now the audio setup
 

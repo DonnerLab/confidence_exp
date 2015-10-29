@@ -1,10 +1,10 @@
-function [ gammaTables1, gammaTables2, displayBaselines, displayRanges, displayGammas, maxLevel, measurements, levels] = calibrate_display(numMeasures, ppd, gabor_dim_pix, varargin)
+function [ gammaTables1, displayBaselines, displayRanges, displayGammas, maxLevel, measurements, levels] = calibrate_display(numMeasures, ppd, gabor_dim_pix, varargin)
 % Adapt psychtoolbox's CalibrateMonitorPhotometer to show two stimuli at
 % different locations and to read measurements from a color hug.
-Screen('Preference', 'SkipSyncTests', 1); 
-xpos = default_arguments(varargin, 'xpos', [-10, 10]);
-ypos = default_arguments(varargin, 'ypos', [0, 0]);
-devices = default_arguments(varargin, 'devices', [1, 2]);
+Screen('Preference', 'SkipSyncTests', 1);
+xpos = default_arguments(varargin, 'xpos', [0]);
+ypos = default_arguments(varargin, 'ypos', [0]);
+devices =1;
 path = default_arguments(varargin, 'path', '/home/meg/Documents/Argyll_V1.7.0/bin');
 
 screenid = min(Screen('Screens'));
@@ -44,20 +44,18 @@ try
     WaitSecs(.1);
     PsychHID('KbQueueFlush');
     
-%     keyIsDown = false;
-%     while ~keyIsDown
-%         [keyIsDown, firstPress] = PsychHID('KbQueueCheck');
-%     end
+    %     keyIsDown = false;
+    %     while ~keyIsDown
+    %         [keyIsDown, firstPress] = PsychHID('KbQueueCheck');
+    %     end
     
     
     
     % Load identity gamma table for calibration:
     LoadIdentityClut(win);
     
-    measurements = {};
-    for k = 1:length(devices)
-        measurements{k} = [];
-    end
+    measurements = [];
+    
     inputV = [0:(maxLevel+1)/(numMeasures - 1):(maxLevel+1)]; %#ok<NBRAK>
     inputV(end) = maxLevel;
     levels = inputV;
@@ -68,11 +66,10 @@ try
         end
         Screen('Flip',win);
         WaitSecs(0.1);
-        data = read_rgb_spotread('devices', devices, 'path', path);
-        %data = read_xyz();
-        for k = 1:length(devices)
-            measurements{k} = [measurements{k}; data(k, :)]; %#ok<AGROW>
-        end
+        data = read_rgb;
+        %data = read_xyz();g
+        measurements = [measurements; data]; %#ok<AGROW>
+        
     end
     
     % Restore normal gamma table and close down:
@@ -93,11 +90,11 @@ displayRanges = [];
 displayGammas = [];
 
 
-for n = 1:length(devices)
+for n = 1:3
     %Normalize values
     
-    vals = measurements{n};
-    vals = vals(:, 3)';
+    vals = measurements;
+    vals = vals(:, n)';
     displayRange = range(vals);
     displayBaseline = min(vals);
     displayRanges = [displayRanges displayRange];
@@ -118,17 +115,5 @@ for n = 1:length(devices)
     gammaTables1 = [gammaTables1, gammaTable1];  %#ok<AGROW>
     firstFit = fittedmodel([0:maxLevel]/maxLevel); %#ok<NBRAK>
     
-    %Spline interp fitting
-    try
-        fittedmodel = fit(inputV',vals','splineinterp');
-        secondFit = fittedmodel([0:maxLevel]/maxLevel); %#ok<NBRAK>
-        %Invert interpolation
-        fittedmodel = fit(vals',inputV','splineinterp');
-        
-        gammaTable2 = fittedmodel([0:maxLevel]/maxLevel); %#ok<NBRAK>
-    catch
-        gammaTable2 = gammaTable1;
-    end
-    gammaTables2 = [gammaTables2, gammaTable2];  %#ok<AGROW>
 end
 return;

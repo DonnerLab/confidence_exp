@@ -34,11 +34,11 @@ else
 end
 
 % send specified trigger
-vals = pp(uint8(pins),onOut,false,uint8(0));
+vals = pp(uint8(pins),onOut,false,uint8(0), 888);
 
 WaitSecs(0.001);
 
 % reset pins to zero
-vals = pp(uint8(pins),resetOut,false,uint8(0));
+vals = pp(uint8(pins),resetOut,false,uint8(0), 888);
 
 end

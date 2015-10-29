@@ -1,19 +1,15 @@
-function [measurements] = test_calibration(test, ppd, gabor_dim_pix, left_values, right_values, varargin)
+function [measurements, levels] = test_calibration(gamma, numMeasures, ppd, gabor_dim_pix, varargin)
 % Adapt psychtoolbox's CalibrateMonitorPhotometer to show two stimuli at
 % different locations and to read measurements from a color hug.
-KbName('UnifyKeyNames');
-xpos = default_arguments(varargin, 'xpos', [-10, 10]);
-ypos = default_arguments(varargin, 'ypos', [0, 0]);
-devices = default_arguments(varargin, 'devices', [1, 2]);
+Screen('Preference', 'SkipSyncTests', 1); 
+xpos = default_arguments(varargin, 'xpos', [0]);
+ypos = default_arguments(varargin, 'ypos', [0]);
+devices = 1;
 path = default_arguments(varargin, 'path', '/home/meg/Documents/Argyll_V1.7.0/bin');
 
-
-screenid = max(Screen('Screens'));
+screenid = min(Screen('Screens'));
 
 psychlasterror('reset');
-keylist = ones(1, 256);
-keylist(KbName({'1!', '2@', '3#', '4$', 'ESCAPE'})) = 1;
-
 try
     
     % Open black window:
@@ -36,49 +32,48 @@ try
     for i = 1:ngabors
         allRects(:, i) = CenterRectOnPointd(baseRect, xpos(i), ypos(i));
     end
+    for n = 1:ngabors
+        Screen('FillOval', win, i,  allRects(:,n));
+    end
     Screen('Flip',win);
-    %WaitSecs(60)
+    
+    % make Kb Queue
+    keyList = zeros(1, 256); keyList(KbName({'ESCAPE'})) = 1; % only listen to those keys!
+    PsychHID('KbQueueCreate', [], keyList);
+    PsychHID('KbQueueStart');
+    WaitSecs(.1);
+    PsychHID('KbQueueFlush');
+
     % Load identity gamma table for calibration:
-    LoadIdentityClut(win);
-    
-    measurements = {};
-    for k = 1:length(devices)
-        measurements{k} = [];
-    end
-    for i = 1:length(left_values)
-        % Compute correction
-        Screen('FillOval', win, left_values(i)*maxLevel,  allRects(:,1));
-        Screen('FillOval', win, right_values(i)*maxLevel,  allRects(:,2));
+
+    oldtable = Screen('LoadNormalizedGammaTable',win, gamma)
+
+    measurements = [];
         
-        Screen('Flip',win);
-        WaitSecs(0.25);
-        if ~test
-            data = read_rgb_spotread('devices', [1,2], 'path', path);
-            for k = 1:length(devices)
-                measurements{k} = [measurements{k}; data(k, :)]; %#ok<AGROW>
-            end
+    inputV = [0:(maxLevel+1)/(numMeasures - 1):(maxLevel+1)]; %#ok<NBRAK>
+    inputV(end) = maxLevel;
+    levels = inputV;
+    for i = inputV
+        colors = [i, i];
+        for n = 1:ngabors
+            Screen('FillOval', win, colors(n),  allRects(:,n));
         end
-        Screen('FillOval', win, left_values(i)*maxLevel,  allRects(:,1));
-        Screen('FillOval', win, right_values(i)*maxLevel,  allRects(:,2));
-        allRects(:,1)
-        Screen('FillOval', win, 255, [530, 950 ,550, 970] );
         Screen('Flip',win);
+        WaitSecs(0.1);
+        data = read_rgb();
+        %data = read_xyz();g
         
-        start = GetSecs;
-        FlushEvents()
-        GetChar();
-        PsychHID('KbQueueFlush');
+            measurements = [measurements; data]; %#ok<AGROW>
         
     end
     
+    Screen('LoadNormalizedGammaTable',win, oldtable)
     % Restore normal gamma table and close down:
-    RestoreCluts;
     Screen('CloseAll');
 catch %#ok<*CTCH>
-    RestoreCluts;
+   Screen('LoadNormalizedGammaTable',win, oldtable)
     Screen('CloseAll');
     psychrethrow(psychlasterror);
 end
 
 
-return;

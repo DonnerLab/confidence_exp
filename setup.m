@@ -5,8 +5,10 @@ options.datadir = 'data/';
 window = false;
 
 options.dist = 65; % viewing distance in cm 
-options.width = 42; % physical width of the screen in cm, 53.5 for BENQ in EEG lab
-options.height = 32; % physical height of the screen in cm, 42 for the MEG projector screen inside the scanner
+options.width = 38; % physical width of the screen in cm, 38 for MEG projector -> but better check on a regular basis
+options.height = 29; % physical height of the screen in cm, 29 for the MEG projector screen inside the scanner
+% If I set the projector to zoom and use a 1920x1080 resolution on the
+% stimulus PC I get a nice display
 
 % Parameters for sampling the contrast + contrast noise
 options.baseline_contrast = 0.5;

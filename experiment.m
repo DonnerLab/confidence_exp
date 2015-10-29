@@ -115,7 +115,8 @@ try
                 'inner_annulus', options.inner_annulus,...
                 'sigma', options.sigma,...
                 'cutoff', options.cutoff,...
-                'expand', expand}];
+                'expand', expand,...
+                'kbqdev', options.kbqdev}];
             
             [correct, response, confidence, rt_choice, timing] = one_trial(window, options.window_rect,...
                 screenNumber, side, ringtex, audio,  trigger_enc, trial_options);
@@ -141,10 +142,10 @@ catch ME
     if (strcmp(ME.identifier,'EXP:Quit'))
         return
     else
-        %LoadIdentityClut(window);
-        %Eyelink('StopRecording');
-        
+        Eyelink('StopRecording');        
         disp(getReport(ME,'extended'));
+        Screen('LoadNormalizedGammaTable', window, old_gamma_table);
+
         rethrow(ME);
     end
 end

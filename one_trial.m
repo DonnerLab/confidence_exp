@@ -49,24 +49,17 @@ decision_delay = default_arguments(variable_arguments, 'decision_delay', 0.0);
 feedback_delay = default_arguments(variable_arguments, 'feedback_delay', 0.5);
 rest_delay = default_arguments(variable_arguments, 'rest_delay', 0.5);
 expand = default_arguments(variable_arguments, 'expand', 1);
+kbqdev = default_arguments(variable_arguments, 'kbqdev', []);
+
 
 %% Setting the stage
 beeps = {MakeBeep(150, .25), MakeBeep(350, .25)};
 timing = struct();
 
-% left_key = KbName('1!');
-% right_key = KbName('2@');
-% conf_very_high = KbName('1!');
-% conf_high = KbName('2@');
-% conf_low = KbName('3#');
-% conf_very_low = KbName('4$');
-
-
-
-first_conf_high = 'b';
-first_conf_low = 'y';
-second_conf_low = 'g';
-second_conf_high = 'r';
+first_conf_high = 'r';
+first_conf_low = 'g';
+second_conf_low = 'y';
+second_conf_high = 'b';
 quit = 'ESCAPE';
 
 black = BlackIndex(screen_number);
@@ -93,7 +86,7 @@ trigger(trigger_enc.trial_start);
 
 waitframes = (baseline_delay-0.01)/ifi;
 
-PsychHID('KbQueueFlush');
+flush_kbqueues(kbqdev);
 
 %% Show reference
 [low, high] = contrast_colors(contrast_reference, 0.5);
@@ -140,7 +133,8 @@ while ~((GetSecs - stimulus_onset) >= (length(contrast_probe)-1)*duration-1*ifi)
     
     % Flip our drawing to the screen
     vbl = Screen('Flip', window, vbl + (waitframes-.5) * ifi);
-    PsychHID('KbQueueFlush');
+    flush_kbqueues(kbqdev);
+
     if framenum == 1 && cnt == 1
         Eyelink('message', 'SYNCTIME');
         trigger(trigger_enc.stim_onset);
@@ -184,10 +178,10 @@ error = false;
 response = nan;
 RT = nan;
 while (GetSecs-start) < 2
-    [keyIsDown, firstPress] = PsychHID('KbQueueCheck');
+    [keyIsDown, firstPress] = check_kbqueues(kbqdev);
     if keyIsDown
         RT = GetSecs();
-        keys = KbName(firstPress);
+        keys = KbName(firstPress)
         if iscell(keys)
             error = true;
             break
@@ -195,22 +189,22 @@ while (GetSecs-start) < 2
         switch keys
             case quit
                 throw(MException('EXP:Quit', 'User request quit'));
-            case {first_conf_high, '1'}
+            case {first_conf_high, '1!'}
                 Eyelink('message', 'decision first conf high');
                 trigger(trigger_enc.first_conf_high);
                 response = -1;
                 confidence = 2;
-            case {first_conf_low, '2'}
+            case {first_conf_low, '2@'}
                 Eyelink('message', 'decision first conf low');
                 trigger(trigger_enc.first_conf_high);
                 response = -1;  
                 confidence = 1;
-            case {second_conf_low, '3'}
+            case {second_conf_low, '3#'}
                 Eyelink('message', 'decision second conf low');
                 trigger(trigger_enc.second_conf_high);
                 response = 1;                
                 confidence = 1;
-            case {second_conf_high, '4'}
+            case {second_conf_high, '4$'}
                 Eyelink('message', 'decision second conf high');
                 trigger(trigger_enc.second_conf_high);
                 response = 1;
