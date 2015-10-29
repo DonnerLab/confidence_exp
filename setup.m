@@ -1,6 +1,6 @@
 % Setup various options
 
-options.num_trials = 100; % How many trials?
+options.num_trials = 2; % How many trials?
 options.datadir = 'data/';
 window = false;
 
@@ -10,7 +10,7 @@ options.height = 32; % physical height of the screen in cm, 42 for the MEG proje
 
 % Parameters for sampling the contrast + contrast noise
 options.baseline_contrast = 0.5;
-options.noise_sigma = 0.15;
+options.noise_sigmas = [.05 .1 .15];
 
 
 options.ringwidth = estimate_pixels_per_degree(0, 65)*3/4;

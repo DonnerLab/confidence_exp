@@ -44,10 +44,11 @@ driftspeed = default_arguments(variable_arguments, 'driftspeed', 1);
 ppd = default_arguments(variable_arguments, 'ppd', estimate_pixels_per_degree(screen_number, 60));
 duration = default_arguments(variable_arguments, 'duration', .5);
 baseline_delay = default_arguments(variable_arguments, 'baseline_delay', 0.5);
-inter_stimulus_delay = default_arguments(variable_arguments, 'baseline_delay', 0.2);
+inter_stimulus_delay = default_arguments(variable_arguments, 'baseline_delay', 0.5);
 decision_delay = default_arguments(variable_arguments, 'decision_delay', 0.0);
 feedback_delay = default_arguments(variable_arguments, 'feedback_delay', 0.5);
 rest_delay = default_arguments(variable_arguments, 'rest_delay', 0.5);
+expand = default_arguments(variable_arguments, 'expand', 1);
 
 %% Setting the stage
 beeps = {MakeBeep(150, .25), MakeBeep(350, .25)};
@@ -70,7 +71,7 @@ quit = 'ESCAPE';
 
 black = BlackIndex(screen_number);
 
-[xCenter yCenter] = RectCenter(windowRect);
+[xCenter, yCenter] = RectCenter(windowRect);
 ifi = Screen('GetFlipInterval', window);
 
 if correct_location == -1
@@ -100,12 +101,16 @@ shiftvalue = 0;
 for frame = 1:(ref_duration/ifi)
     Screen('DrawTexture', window, ringtex, [], [], [], [], [], low, [], [],...
         [high(1), high(2), high(3), high(4), shiftvalue, ringwidth, radius, inner_annulus, sigma, cutoff, 0, 0]);
-    vbl = Screen('Flip', window, vbl + (waitframes) * ifi);
+    vbl = Screen('Flip', window, vbl + (waitframes-0.1) * ifi);
+    if frame == 1
+        timing.ref_onset = vbl;
+    end
     waitframes = 1;
-    shiftvalue = shiftvalue+driftspeed;
+    shiftvalue = shiftvalue+expand*driftspeed;
 end
 Screen('DrawDots', window, [xCenter; yCenter], 10, black, [], 1);
 vbl = Screen('Flip', window);
+timing.ref_offset = vbl;
 
 waitframes = (inter_stimulus_delay-0.01)/ifi;
 
@@ -125,7 +130,7 @@ while ~((GetSecs - stimulus_onset) >= (length(contrast_probe)-1)*duration-1*ifi)
 
     Screen('DrawTexture', window, ringtex, [], [], [], [], [], low, [], [],...
         [high(1), high(2), high(3), high(4), shiftvalue, ringwidth, radius, inner_annulus, sigma, cutoff, 0, 0]);
-    shiftvalue = shiftvalue+driftspeed;
+    shiftvalue = shiftvalue+expand*driftspeed;
     % Change the blend function to draw an antialiased fixation point
     % in the centre of the array
     Screen('BlendFunction', window, 'GL_SRC_ALPHA', 'GL_ONE_MINUS_SRC_ALPHA');
@@ -159,17 +164,8 @@ while ~((GetSecs - stimulus_onset) >= (length(contrast_probe)-1)*duration-1*ifi)
     end
     
 end
+
 target = (waitframes - 0.5) * ifi;
-% if decision_delay > 0
-%     Screen('DrawDots', window, [xCenter; yCenter], 10, black, [], 1);
-%     vbl = Screen('Flip', window, vbl + (waitframes-0.5)*ifi);
-%     Eyelink('message', 'stim_off');
-%     trigger(trigger_enc.stim_off);
-%     WaitSecs(0.01);
-%     trigger(trigger_enc.zero);
-%     target = decision_delay -0.01 - 0.5 * ifi;
-% end
-% in the centre of the array
 Screen('BlendFunction', window, 'GL_SRC_ALPHA', 'GL_ONE_MINUS_SRC_ALPHA');
 timing.animation = dynamic;
 
@@ -186,11 +182,12 @@ rt_choice = nan;
 key_pressed = false;
 error = false;
 response = nan;
-while (GetSecs-start) < 20
+RT = nan;
+while (GetSecs-start) < 2
     [keyIsDown, firstPress] = PsychHID('KbQueueCheck');
     if keyIsDown
-         RT = GetSecs()
-        keys = KbName(firstPress)
+        RT = GetSecs();
+        keys = KbName(firstPress);
         if iscell(keys)
             error = true;
             break
@@ -222,10 +219,10 @@ while (GetSecs-start) < 20
         if ~isnan(response)
             if correct_location == response
                 correct = 1;
-                fprintf('Correct')
+                fprintf('Choice Correct')
             else
                 correct = 0;
-                fprintf('Wrong')
+                fprintf('Choice Wrong')
             end
             rt_choice = RT-start;
             key_pressed = true;
@@ -233,7 +230,7 @@ while (GetSecs-start) < 20
         end
     end
 end
-
+timing.RT = RT;
 
 
 if ~key_pressed || error
@@ -256,7 +253,7 @@ beep = beeps{correct+1};
 PsychPortAudio('FillBuffer', pahandle.h, repmat(beep, [2,1]));
 timing.feedback_delay_start = vbl;
 Screen('DrawDots', window, [xCenter; yCenter], 10, black, [], 1);
-waitframes = (feedback_delay/ifi) - 2;
+waitframes = (feedback_delay/ifi) - 1;
 vbl = Screen('Flip', window, vbl + (waitframes - 0.5) * ifi);
 t1 = PsychPortAudio('Start', pahandle.h, 1, 0, 1);
 if correct
