@@ -1,4 +1,4 @@
-function [correct, response, confidence, rt_choice, timing] = one_trial(window, windowRect, screen_number, correct_location, ringtex, pahandle, trigger_enc, variable_arguments)
+function [correct, response, confidence, rt_choice, timing] = one_trial(window, windowRect, screen_number, correct_location, ringtex, pahandle, trigger_enc, beeps, variable_arguments)
 %% function [correct, response, confidence, rt_choice, rt_conf] = one_trial(window, windowRect, screen_number, correct_location, gabortex, gaborDimPix, pahandle, variable_arguments)
 %
 % Presents a circular contracting/expanding grating with a reference
@@ -53,7 +53,6 @@ kbqdev = default_arguments(variable_arguments, 'kbqdev', []);
 
 
 %% Setting the stage
-beeps = {MakeBeep(150, .25), MakeBeep(350, .25)};
 timing = struct();
 
 first_conf_high = 'r';
@@ -233,7 +232,7 @@ if ~key_pressed || error
     fprintf('Error in answer\n')
     wait_period = 1 + feedback_delay + rest_delay;
     WaitSecs(wait_period);
-    correct = nan;
+   correct = nan;
     response = nan;
     confidence = nan;
     rt_choice = nan;
@@ -244,7 +243,7 @@ end
 
 %% Provide Feedback
 beep = beeps{correct+1};
-PsychPortAudio('FillBuffer', pahandle.h, repmat(beep, [2,1]));
+PsychPortAudio('FillBuffer', pahandle.h, beep);
 timing.feedback_delay_start = vbl;
 Screen('DrawDots', window, [xCenter; yCenter], 10, black, [], 1);
 waitframes = (feedback_delay/ifi) - 1;

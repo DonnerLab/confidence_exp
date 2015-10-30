@@ -119,7 +119,7 @@ try
                 'kbqdev', options.kbqdev}];
             
             [correct, response, confidence, rt_choice, timing] = one_trial(window, options.window_rect,...
-                screenNumber, side, ringtex, audio,  trigger_enc, trial_options);
+                screenNumber, side, ringtex, audio,  trigger_enc, options.beeps, trial_options);
             
             timings{trial} = timing;
             if ~isnan(correct) && ~repeat_trial

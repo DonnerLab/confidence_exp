@@ -32,3 +32,7 @@ quest.delta = 0.5/128;
 quest.gamma = 0.15;
 quest.threshold_guess = 0.025;
 quest.threshold_guess_sigma = 0.25;
+
+
+% Load marked feedback beeps
+options.beeps = {repmat(audioread('low_mrk_150Hz.wav'), 1,2)', repmat(audioread('high_mrk_350Hz.wav'), 1,2)'};
