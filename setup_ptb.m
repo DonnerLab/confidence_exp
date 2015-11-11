@@ -17,11 +17,12 @@ Screen('ColorRange', window, 1);
 
 % You definetly want to set a custom look up table.
 % gamma is the look up table
-load pojector_calib_20151029.mat
+load pojector_calib_20151111.mat
 if exist('gammaTables1', 'var') == 0 && length(gammaTables1) == 256
     throw(MException('EXP:Quit', 'variable gamma not in workspace; no gamma lut loaded'));
 end
 old_gamma_table = Screen('LoadNormalizedGammaTable', window, gammaTables1);
+
 
 % Set the display parameters 'frameRate' and 'resolution'
 options.frameDur     = Screen('GetFlipInterval',window); %duration of one frame
@@ -29,6 +30,14 @@ options.frameRate    = 1/options.frameDur; %Hz
 
 HideCursor(screenNumber)
 Screen('Flip', window);
+
+
+    %% Set up Eye Tracker
+    [el, options] = ELconfig(window, subject, options);
+    
+    % Calibrate the eye tracker
+    EyelinkDoTrackerSetup(el);
+    
 
 % Make gabortexture
 %gabortex = make_gabor(window, 'gabor_dim_pix', options.gabor_dim_pix);
@@ -57,15 +66,16 @@ devices = PsychPortAudio('GetDevices');
 
 % UA-25 is the sound that's played in the subject's earbuds
 for i = 1:length(devices)
-    if strcmp(devices(i).DeviceName,'front') %UA-25: USB Audio (hw:1,0)')
+    if strcmp(devices(i).DeviceName,'EDIROL UA-25: USB Audio (hw:1,0)') %UA-25: USB Audio (hw:1,0)')
         break
     end
 end
+devices(i)
 % check that we found the low-latency audio port
-%assert(strfind(devices(i).DeviceName, 'UA-25') > 0, 'could not detect the right audio port! aborting')
+assert(strfind(devices(i).DeviceName, 'UA-25') > 0, 'could not detect the right audio port! aborting')
 audio = [];
-%i = 10; % for the EEG lab
 
+%i = 10; % for the EEG lab
 audio.i = devices(i).DeviceIndex;
 audio.freq = devices(i).DefaultSampleRate;
 audio.device = devices(i);

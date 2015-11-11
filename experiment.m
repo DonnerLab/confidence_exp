@@ -3,6 +3,7 @@
 % Runs one session of the confidence experiment.
 %
 sca; clear all;
+addpath matlabtrigger/
 %% Global parameters.
 rng('shuffle')
 setup;
@@ -48,12 +49,7 @@ try
     %% Configure Psychtoolbox
     setup_ptb;
     
-    %% Set up Eye Tracker
-    [el, options] = ELconfig(window, subject, options);
-    
-    % Calibrate the eye tracker
-    EyelinkDoTrackerSetup(el);
-    
+
     % start recording eye position
     Eyelink('StartRecording');
     % record a few samples before we actually start displaying
@@ -142,8 +138,8 @@ catch ME
     if (strcmp(ME.identifier,'EXP:Quit'))
         return
     else
-        Eyelink('StopRecording');        
         disp(getReport(ME,'extended'));
+        Eyelink('StopRecording');        
         Screen('LoadNormalizedGammaTable', window, old_gamma_table);
 
         rethrow(ME);

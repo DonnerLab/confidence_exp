@@ -4,7 +4,7 @@ res = Screen('Resolution', screenNum);
 % setup the Eyelink initialization at the beginning of each block
 % code from Hannah, UKE
 
-dummymode = 1; % set to 1 to run in dummymode (using mouse as pseudo-eyetracker)
+dummymode = 0; % set to 1 to run in dummymode (using mouse as pseudo-eyetracker)
 [IsConnected, IsDummy] = EyelinkInit(dummymode);
 if IsDummy, warning('SetupEL:dummy','EyeLink in dummy mode!'); end
 if ~IsConnected
