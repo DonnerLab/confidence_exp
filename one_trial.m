@@ -1,4 +1,4 @@
-function [correct, response, confidence, rt_choice, timing] = one_trial(window, windowRect, screen_number, correct_location, ringtex, pahandle, trigger_enc, beeps, variable_arguments)
+function [correct, response, confidence, rt_choice, timing] = one_trial(window, windowRect, screen_number, correct_location, ringtex, pahandle, trigger_enc, beeps, ppd, variable_arguments)
 %% function [correct, response, confidence, rt_choice, rt_conf] = one_trial(window, windowRect, screen_number, correct_location, gabortex, gaborDimPix, pahandle, variable_arguments)
 %
 % Presents a circular contracting/expanding grating with a reference
@@ -35,13 +35,12 @@ ref_duration =  default_arguments(variable_arguments, 'ref_duration', .400);
 radius = default_arguments(variable_arguments, 'radius', 150);
 inner_annulus = default_arguments(variable_arguments, 'inner_annulus', 5);
 ringwidth = default_arguments(variable_arguments, 'ringwidth', 25);
-sigma = default_arguments(variable_arguments, 'sigma', 2*estimate_pixels_per_degree(screen_number, 60));
-cutoff = default_arguments(variable_arguments, 'cutoff', 2*estimate_pixels_per_degree(screen_number, 3.5));
+sigma = default_arguments(variable_arguments, 'sigma', 2*ppd);
+cutoff = default_arguments(variable_arguments, 'cutoff', 2*ppd);
 
 contrast_reference = default_arguments(variable_arguments, 'contrast_reference', 0.5);
 contrast_probe = default_arguments(variable_arguments, 'contrast_probe', [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]/10.);
 driftspeed = default_arguments(variable_arguments, 'driftspeed', 1);
-ppd = default_arguments(variable_arguments, 'ppd', estimate_pixels_per_degree(screen_number, 60));
 duration = default_arguments(variable_arguments, 'duration', .5);
 baseline_delay = default_arguments(variable_arguments, 'baseline_delay', 0.5);
 inter_stimulus_delay = default_arguments(variable_arguments, 'baseline_delay', 0.5);
@@ -213,10 +212,10 @@ while (GetSecs-start) < 2
         if ~isnan(response)
             if correct_location == response
                 correct = 1;
-                fprintf('Choice Correct')
+                fprintf('Choice Correct\n')
             else
                 correct = 0;
-                fprintf('Choice Wrong')
+                fprintf('Choice Wrong\n')
             end
             rt_choice = RT-start;
             key_pressed = true;
