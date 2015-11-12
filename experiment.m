@@ -19,7 +19,7 @@ trigger_enc = setup_trigger;
 % trials
 opts = {'num_cycles', 5,...
     'duration', .1,...
-    'ppd', estimate_pixels_per_degree(0, 65),...%31.9,... % for MEG display at 65cm viewing distance
+    'ppd', options.ppd,...%31.9,... % for MEG display at 65cm viewing distance
     'xpos', [-10, 10],...
     'ypos', [6.5, 6.5]}; % Position Gabors in the lower hemifield to get activation in the dorsal pathaway
 
@@ -119,7 +119,7 @@ try
                 'kbqdev', options.kbqdev}];
             
             [correct, response, confidence, rt_choice, timing] = one_trial(window, options.window_rect,...
-                screenNumber, side, ringtex, audio,  trigger_enc, options.beeps, trial_options);
+                screenNumber, side, ringtex, audio,  trigger_enc, options.beeps, options.ppd, trial_options);
             
             timings{trial} = timing;
             if ~isnan(correct) && ~repeat_trial
