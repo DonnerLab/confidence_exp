@@ -17,7 +17,7 @@ Screen('ColorRange', window, 1);
 
 % You definetly want to set a custom look up table.
 % gamma is the look up table
-load pojector_calib_20151111.mat
+load projector_calib_20151111.mat
 if exist('gammaTables1', 'var') == 0 && length(gammaTables1) == 256
     throw(MException('EXP:Quit', 'variable gamma not in workspace; no gamma lut loaded'));
 end
@@ -45,7 +45,8 @@ ringtex = make_circular_grating(window, options.ringwidth);
 % make Kb Queue: Need to specify the device to query button box
 % Find the keyboard + MEG buttons. 
 [idx, names, all] = GetKeyboardIndices();
-options.kbqdev = [idx(strcmpi(names, 'ATEN USB KVMP w. OSD')), idx(strcmpi(names, 'Current Designs, Inc. 932'))];
+options.kbqdev = [idx(strcmpi(names, 'ATEN USB KVMP w. OSD')), idx(strcmpi(names, 'Current Designs, Inc. 932')),...
+    idx(strcmpi(names, 'Apple Internal Keyboard / Trackpad')), idx(strcmpi(names, ''))];
 
 keyList = zeros(1, 256); 
 keyList(KbName({'ESCAPE','SPACE', 'LeftArrow', 'RightArrow',...
@@ -72,7 +73,7 @@ for i = 1:length(devices)
 end
 devices(i)
 % check that we found the low-latency audio port
-assert(strfind(devices(i).DeviceName, 'UA-25') > 0, 'could not detect the right audio port! aborting')
+%assert(strfind(devices(i).DeviceName, 'UA-25') > 0, 'could not detect the right audio port! aborting')
 audio = [];
 
 %i = 10; % for the EEG lab

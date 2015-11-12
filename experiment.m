@@ -3,11 +3,14 @@
 % Runs one session of the confidence experiment.
 %
 sca; clear all;
-addpath matlabtrigger/
 %% Global parameters.
 rng('shuffle')
 setup;
-
+if strcmp(options.where, 'meg')
+    addpath matlabtrigger/
+else
+   addpath faketrigger/
+end
 %% Setup the ParPort
 trigger_enc = setup_trigger;
 %setup_parport;
@@ -24,7 +27,7 @@ opts = {'num_cycles', 5,...
 
 try
     %% Ask for some subject details and load old QUEST parameters
-    subject.initials = 'NW' % input('Initials? ', 's');
+    subject.initials = input('Initials? ', 's');
     options.datadir = fullfile(options.datadir, subject.initials);
     [~, ~, ~] = mkdir(options.datadir);
     quest_file = fullfile(options.datadir, 'quest_results.mat');
@@ -39,12 +42,12 @@ try
         end
     end
     
-    %     fprintf('QUEST Parameters\n----------------\nThreshold Guess: %1.4f\nSigma Guess: %1.4f\n',...
-    %         quest.threshold_guess, quest.threshold_guess_sigma)
-    %     if ~strcmp(input('OK? [y/n] ', 's'), 'y')
-    %         throw(MException('EXP:Quit', 'User request quit'));
-    %
-    %     end
+        fprintf('QUEST Parameters\n----------------\nThreshold Guess: %1.4f\nSigma Guess: %1.4f\n',...
+            quest.threshold_guess, quest.threshold_guess_sigma)
+        if ~strcmp(input('OK? [y/n] ', 's'), 'y')
+            throw(MException('EXP:Quit', 'User request quit'));
+    
+        end
     
     %% Configure Psychtoolbox
     setup_ptb;
@@ -95,10 +98,11 @@ try
             % Sample contrasts.
             contrast = min(1, max(0, (QuestQuantile(q, 0.5))));
             side = randsample([1,-1], 1);
-            noise_sigma = randsample(options.noise_sigmas, 1);
-            [side, contrast_fluctuations] = sample_contrast(side, contrast, noise_sigma, options.baseline_contrast);
-            [side mean(contrast_fluctuations)]
+            noise_sigma = randsample(options.noise_sigmas, 1); 
+            [side, contrast_fluctuations] = sample_contrast(side, contrast,...
+                noise_sigma, options.baseline_contrast); % Converts effective contrast to absolute contrst
             expand = randsample([-1, 1], 1);
+            fprintf('Correct is: %i, mean contrast is %f\n', side, mean(contrast_fluctuations))
             % Set options that are valid only for this trial.
             trial_options = [opts, {...
                 'contrast_probe', contrast_fluctuations,...

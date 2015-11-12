@@ -1,4 +1,5 @@
 % Setup various options
+options.where = 'local';
 
 options.num_trials = 100; % How many trials?
 options.datadir = 'data/';

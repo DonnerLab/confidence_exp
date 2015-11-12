@@ -38,7 +38,7 @@ ringwidth = default_arguments(variable_arguments, 'ringwidth', 25);
 sigma = default_arguments(variable_arguments, 'sigma', 2*estimate_pixels_per_degree(screen_number, 60));
 cutoff = default_arguments(variable_arguments, 'cutoff', 2*estimate_pixels_per_degree(screen_number, 3.5));
 
-contrast_reference = default_arguments(variable_arguments, 'contrast_reference', 0.25);
+contrast_reference = default_arguments(variable_arguments, 'contrast_reference', 0.5);
 contrast_probe = default_arguments(variable_arguments, 'contrast_probe', [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]/10.);
 driftspeed = default_arguments(variable_arguments, 'driftspeed', 1);
 ppd = default_arguments(variable_arguments, 'ppd', estimate_pixels_per_degree(screen_number, 60));
@@ -55,10 +55,10 @@ kbqdev = default_arguments(variable_arguments, 'kbqdev', []);
 %% Setting the stage
 timing = struct();
 
-first_conf_high = 'r';
-first_conf_low = 'g';
-second_conf_low = 'y';
-second_conf_high = 'b';
+first_conf_high = '1';
+first_conf_low = '2';
+second_conf_low = '3';
+second_conf_high = '4';
 quit = 'ESCAPE';
 
 black = BlackIndex(screen_number);
@@ -87,12 +87,13 @@ waitframes = (baseline_delay-0.01)/ifi;
 
 flush_kbqueues(kbqdev);
 
+
 %% Show reference
 [low, high] = contrast_colors(contrast_reference, 0.5);
 shiftvalue = 0;
 for frame = 1:(ref_duration/ifi)
     Screen('DrawTexture', window, ringtex, [], [], [], [], [], low, [], [],...
-        [high(1), high(2), high(3), high(4), shiftvalue, ringwidth, radius, inner_annulus, sigma, cutoff, 0, 0]);
+        [high(1), high(2), high(3), high(4), shiftvalue, ringwidth, radius, inner_annulus, sigma, cutoff, xCenter, yCenter]);
     vbl = Screen('Flip', window, vbl + (waitframes-0.1) * ifi);
     if frame == 1
         timing.ref_onset = vbl;
@@ -121,7 +122,7 @@ while ~((GetSecs - stimulus_onset) >= (length(contrast_probe)-1)*duration-1*ifi)
     %Screen('BlendFunction', window, 'GL_SRC_ALPHA', 'GL_ONE_MINUS_SRC_ALPHA');
 
     Screen('DrawTexture', window, ringtex, [], [], [], [], [], low, [], [],...
-        [high(1), high(2), high(3), high(4), shiftvalue, ringwidth, radius, inner_annulus, sigma, cutoff, 0, 0]);
+        [high(1), high(2), high(3), high(4), shiftvalue, ringwidth, radius, inner_annulus, sigma, cutoff, xCenter, yCenter]);
     shiftvalue = shiftvalue+expand*driftspeed;
     % Change the blend function to draw an antialiased fixation point
     % in the centre of the array
@@ -180,7 +181,7 @@ while (GetSecs-start) < 2
     [keyIsDown, firstPress] = check_kbqueues(kbqdev);
     if keyIsDown
         RT = GetSecs();
-        keys = KbName(firstPress)
+        keys = KbName(firstPress);
         if iscell(keys)
             error = true;
             break

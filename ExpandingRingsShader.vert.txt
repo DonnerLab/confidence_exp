@@ -22,6 +22,7 @@ varying float Radius;
 varying float Shift;
 varying float Sigma;
 varying float Annulus;
+varying vec2 RC;
 varying float Cutoff;
 varying vec4  firstColor;
 varying vec4  secondColor;
@@ -44,4 +45,7 @@ void main()
     Annulus   = auxParameters1[3];
     Sigma     = auxParameters2[0];
     Cutoff    = auxParameters2[1];
+    RC[0] = auxParameters2[2];
+    RC[1] = auxParameters2[3];
+    
 }

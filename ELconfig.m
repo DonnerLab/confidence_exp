@@ -3,8 +3,12 @@ screenNum = max(Screen('Screens')); % will use the main screen when single-monit
 res = Screen('Resolution', screenNum);
 % setup the Eyelink initialization at the beginning of each block
 % code from Hannah, UKE
-
+if strcmp(options.where, 'meg')
 dummymode = 0; % set to 1 to run in dummymode (using mouse as pseudo-eyetracker)
+
+else
+dummymode = 1; % set to 1 to run in dummymode (using mouse as pseudo-eyetracker)
+end    
 [IsConnected, IsDummy] = EyelinkInit(dummymode);
 if IsDummy, warning('SetupEL:dummy','EyeLink in dummy mode!'); end
 if ~IsConnected
