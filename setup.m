@@ -9,16 +9,17 @@ options.dist = 65; % viewing distance in cm
 options.width = 38; % physical width of the screen in cm, 38 for MEG projector -> but better check on a regular basis
 options.height = 29; % physical height of the screen in cm, 29 for the MEG projector screen inside the scanner
 % If I set the projector to zoom and use a 1920x1080 resolution on the
-% stimulus PC I get a nice display
-
+% stimulus PC I get a nice display -> The image is ten roughly 1450x1080
+options.resolution = [1450, 1080];
+options.ppd = estimate_pixels_per_degree(options);
 % Parameters for sampling the contrast + contrast noise
 options.baseline_contrast = 0.5;
 options.noise_sigmas = [.05 .1 .15];
 
 
-options.ringwidth = estimate_pixels_per_degree(0, 65)*3/4;
-options.inner_annulus = 1.5*estimate_pixels_per_degree(0, 65);
-options.radius = 4*estimate_pixels_per_degree(0, 65);
+options.ringwidth = options.ppd*3/4;
+options.inner_annulus = 1.5*options.ppd;
+options.radius = 4*options.ppd;
 options.sigma = 75;
 options.cutoff = 5.5;
 
