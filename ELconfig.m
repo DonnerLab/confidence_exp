@@ -25,7 +25,7 @@ el = EyelinkInitDefaults(window);
 rv = []; % collect return values from eyetracker commands
 
 rv(end+1) = Eyelink('command', ...
-    'screen_pixel_coords = %ld %ld %ld %ld', 0, 0, res.width, res.height); %rv 1
+    'screen_pixel_coords = %ld %ld %ld %ld', 0, 0, res.width-1, res.height-1); %rv 1
 
 % BENQ Screen is 535mm wide and 300mm high
 rv(end+1) = Eyelink('command', 'screen_phys_coords = %ld %ld %ld %ld' ....
@@ -53,12 +53,28 @@ Eyelink('command', 'link_event_filter = LEFT,RIGHT,FIXATION,SACCADE,BLINK, MESSA
 Eyelink('command', 'file_sample_data = LEFT,RIGHT,GAZE,AREA,GAZERES,HREF,PUPIL,STATUS,BUTTON,INPUT,HTARGET');
 Eyelink('command', 'file_event_data = GAZE,GAZERES,HREF,AREA,VELOCITY');
 Eyelink('command', 'file_event_filter = LEFT,RIGHT,FIXATION,SACCADE,BLINK,MESSAGE,BUTTON,INPUT');
-Eyelink('command', 'calibration_type = HV9');
+
+%Eyelink('command', 'calibration_type = HV9');
+yc = res.width/2.;
+xc = res.height/2.;
+targets = sprintf('%i,%i, %i,%i %i,%i %i,%i %i,%i', xc,yc,  xc+100,yc, xc-100,yc, xc,yc+100, xc,yc-100)
+targets = sprintf('%i,%i, %i,%i %i,%i', xc,yc,  xc,yc, xc,yc)
+
+Eyelink('command', 'enable_automatic_calibration = NO');
+Eyelink('command', 'calibration_type = HV5');
+Eyelink('command', 'generate_default_targets = NO');
+%Eyelink('command','calibration_targets = %d,%d %d,%d %d' ,... 
+%Eyelink('command','validation_targets = %d,%d %d,%d %d' ,...
+
+Eyelink('command','calibration_targets = 960,540 760,540 1160,540 960,740 960,320');
+Eyelink('command','validation_targets = 960,540 760,540 1160,540 960,740 960,320');
+
 
 EyelinkUpdateDefaults(el);
 
 %  open edf file for recording data from Eyelink - CANNOT BE MORE THAN 8 CHARACTERS
-options.edfFile = sprintf('%ds%db%d.edf', subject.initials);
+
+options.edfFile = sprintf('%s.edf', subject.initials);
 Eyelink('Openfile', options.edfFile);
 
 % send information that is written in the preamble

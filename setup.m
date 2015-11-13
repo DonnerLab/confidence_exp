@@ -1,5 +1,5 @@
 % Setup various options
-options.where = 'local';
+options.where = 'meg';
 
 options.num_trials = 100; % How many trials?
 options.datadir = 'data/';
@@ -8,9 +8,13 @@ window = false;
 options.dist = 65; % viewing distance in cm 
 options.width = 38; % physical width of the screen in cm, 38 for MEG projector -> but better check on a regular basis
 options.height = 29; % physical height of the screen in cm, 29 for the MEG projector screen inside the scanner
+options.twidth = 38; % Size of the not-cropped image
+options.theight = 29; % Size of the not-cropped image
+
 % If I set the projector to zoom and use a 1920x1080 resolution on the
 % stimulus PC I get a nice display -> The image is ten roughly 1450x1080
 options.resolution = [1450, 1080];
+options.wdiff = (1920-options.resolution(1)) /2;
 options.ppd = estimate_pixels_per_degree(options);
 % Parameters for sampling the contrast + contrast noise
 options.baseline_contrast = 0.5;

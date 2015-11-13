@@ -32,23 +32,22 @@ HideCursor(screenNumber)
 Screen('Flip', window);
 
 
-    %% Set up Eye Tracker
-    [el, options] = ELconfig(window, subject, options);
-    
-    % Calibrate the eye tracker
-    EyelinkDoTrackerSetup(el);
-    
+%% Set up Eye Tracker
+[el, options] = ELconfig(window, subject, options);
+% Calibrate the eye tracker
+EyelinkDoTrackerSetup(el);
+
 
 % Make gabortexture
 %gabortex = make_gabor(window, 'gabor_dim_pix', options.gabor_dim_pix);
 ringtex = make_circular_grating(window, options.ringwidth);
 % make Kb Queue: Need to specify the device to query button box
-% Find the keyboard + MEG buttons. 
+% Find the keyboard + MEG buttons.
 [idx, names, all] = GetKeyboardIndices();
 options.kbqdev = [idx(strcmpi(names, 'ATEN USB KVMP w. OSD')), idx(strcmpi(names, 'Current Designs, Inc. 932')),...
     idx(strcmpi(names, 'Apple Internal Keyboard / Trackpad')), idx(strcmpi(names, ''))];
 
-keyList = zeros(1, 256); 
+keyList = zeros(1, 256);
 keyList(KbName({'ESCAPE','SPACE', 'LeftArrow', 'RightArrow',...
     '1', '2', '3', '4', 'b', 'g', 'y', 'r', '1!', '2@', '3#', '4$'})) = 1; % only listen to those keys!
 % first four are the buttons in mode 001, escape and space are for
@@ -73,7 +72,7 @@ for i = 1:length(devices)
 end
 devices(i)
 % check that we found the low-latency audio port
-%assert(strfind(devices(i).DeviceName, 'UA-25') > 0, 'could not detect the right audio port! aborting')
+assert(numel(strfind(devices(i).DeviceName, 'UA-25')) > 0, 'could not detect the right audio port! aborting')
 audio = [];
 
 %i = 10; % for the EEG lab
