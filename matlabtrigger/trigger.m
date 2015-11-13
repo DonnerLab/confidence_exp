@@ -21,8 +21,7 @@ function trigger(number)
 %--------------------------------------------------------------------------
 
 bstr = dec2bin(number, 8);
-pins = find(str2num(reshape(bstr',[],1))');
-
+pins = find(str2num(reshape(flip(bstr)',[],1))') + 1;
 
 % check if input is valid (throw error/abort if not)
 if isempty(pins)
@@ -37,7 +36,7 @@ end
 vals = pp(uint8(pins),onOut,false,uint8(0), 888);
 
 WaitSecs(0.001);
-
+%WaitSecs(2);
 % reset pins to zero
 vals = pp(uint8(pins),resetOut,false,uint8(0), 888);
 
