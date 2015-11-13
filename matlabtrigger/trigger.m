@@ -19,9 +19,10 @@ function trigger(number)
 % if you want pp to be as fast as possible, supply both the port
 % and addr, and set slowChecks to false.
 %--------------------------------------------------------------------------
-
+assert number<=255
 bstr = dec2bin(number, 8);
 pins = find(str2num(reshape(flip(bstr)',[],1))') + 1;
+
 
 % check if input is valid (throw error/abort if not)
 if isempty(pins)
