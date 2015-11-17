@@ -39,7 +39,7 @@ rv(end+1) = Eyelink('command', 'screen_distance = %ld %ld', ...
 
 % Write the display configuration as message into the file
 Eyelink('message', ...
-    'DISPLAY_COORDS %ld %ld %ld %ld', 0, 0, res.width, res.height);
+    'DISPLAY_COORDS %ld %ld %ld %ld', 0, 0, res.width434, res.height);
 Eyelink('message', 'SCREEN_PHYS_COORDS %ld %ld %ld %ld' ....
     , -floor(10*options.width/2) ... %half width
     ,  floor(10*options.height/2) ... %half height
@@ -66,8 +66,8 @@ Eyelink('command', 'generate_default_targets = NO');
 %Eyelink('command','calibration_targets = %d,%d %d,%d %d' ,... 
 %Eyelink('command','validation_targets = %d,%d %d,%d %d' ,...
 
-Eyelink('command','calibration_targets = 960,540 760,540 1160,540 960,740 960,320');
-Eyelink('command','validation_targets = 960,540 760,540 1160,540 960,740 960,320');
+Eyelink('command','calibration_targets = 960,540 760,540 1160,540 960,320 960,740');
+Eyelink('command','validation_targets = 960,540 760,540 1160,540 960,320 960,740');
 
 
 EyelinkUpdateDefaults(el);

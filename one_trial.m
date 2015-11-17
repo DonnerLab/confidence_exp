@@ -115,8 +115,8 @@ framenum = 1;
 dynamic = [];
 stimulus_onset = nan;
 [low, high] = contrast_colors(contrast_probe(cnt), 0.5);
-cnt = cnt+1;
-while ~((GetSecs - stimulus_onset) >= (length(contrast_probe)-1)*duration-1*ifi) 
+%cnt = cnt+1;
+while ~((GetSecs - stimulus_onset) >= (length(contrast_probe))*duration-2*ifi) 
     
     % Set the right blend function for drawing the gabors
     Screen('BlendFunction', window, 'GL_ONE', 'GL_ZERO');
@@ -139,9 +139,11 @@ while ~((GetSecs - stimulus_onset) >= (length(contrast_probe)-1)*duration-1*ifi)
     if framenum == 1
         Eyelink('message', 'SYNCTIME');
         trigger(trigger_enc.stim_onset);
+        
     elseif framenum == 1 && ~(cnt==1)
         trigger(trigger_enc.con_change);
     end
+    framenum = framenum +1;
     waitframes = 1;
     dynamic = [dynamic vbl];
     
@@ -149,13 +151,14 @@ while ~((GetSecs - stimulus_onset) >= (length(contrast_probe)-1)*duration-1*ifi)
     elapsed = GetSecs;
     if isnan(start)
         stimulus_onset = GetSecs;
+        trigger(trigger_enc.con_change);
         start = GetSecs;
     end
-    if (elapsed-start) > duration-.5*ifi
-        start = GetSecs;
-        [low, high] = contrast_colors(contrast_probe(cnt), 0.5);
+    if (elapsed-start) > (duration-.5*ifi)
+        start = GetSecs;        
         cnt = cnt+1;
-        
+        [low, high] = contrast_colors(contrast_probe(cnt), 0.5);        
+        trigger(trigger_enc.con_change);
     end
     
 end
@@ -168,6 +171,7 @@ timing.animation = dynamic;
 % Draw the fixation point
 Screen('DrawDots', window, [xCenter; yCenter], 10, black, [], 1);
 vbl = Screen('Flip', window, vbl + target );
+
 trigger(trigger_enc.decision_start);
 Eyelink('message', 'decision_start');
 
