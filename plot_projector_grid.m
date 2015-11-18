@@ -1,3 +1,4 @@
+plotpos=[7 8 9 4 5 6 1 2 3];
 figure
 for k = 1:9
     S1=subplot(3,3,plotpos(k));

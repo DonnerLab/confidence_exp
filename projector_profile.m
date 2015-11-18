@@ -1,7 +1,7 @@
 positions = [-1  1; 0  1; 1  1;...
     -1  0; 0  0; 1  0;...
     -1 -1; 0 -1; 1 -1];
-positions = positions.*400;
+positions = positions.*400*0;
 
 Screen('Preference', 'SkipSyncTests', 1);
 screenid = min(Screen('Screens'));
@@ -22,7 +22,7 @@ cnt = 1;
 for pos = positions'
     xpos = pos(1);
     ypos = pos(2);
-    [cm, cl] = pofile_luminance(win, windowRect, maxLevel,  25, 150, xpos, ypos);
+    [cm, cl] = pofile_luminance(win, windowRect, maxLevel,  25, 550, xpos, ypos);
     data(:,:,cnt) = cm;
     cnt = cnt+1;
     
