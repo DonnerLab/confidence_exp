@@ -6,7 +6,7 @@ sca; clear all;
 %% Global parameters.
 rng('shuffle')
 setup;
-if strcmp(options.where, 'meg')
+if strcmp(options.do_trigger, 'yes')
     addpath matlabtrigger/
 else
    addpath faketrigger/

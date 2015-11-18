@@ -8,6 +8,7 @@ white = WhiteIndex(screenNumber);
 black = BlackIndex(screenNumber);
 grey = white / 2;
 % Open the screen
+Screen('Preference', 'SkipSyncTests', 1);
 [window, windowRect] = Screen('OpenWindow', screenNumber, grey);
 %[window, windowRect] = Screen('OpenWindow', screenNumber, grey, [0, 0, 400, 400]);
 options.window_rect = windowRect;
@@ -33,7 +34,7 @@ Screen('Flip', window);
 
 
     %% Set up Eye Tracker
-    [el, options] = ELconfig(window, subject, options);
+    [el, options] = ELconfig(window, subject, options, screenNumber);
     
     % Calibrate the eye tracker
     EyelinkDoTrackerSetup(el);
