@@ -58,8 +58,7 @@ Eyelink('command', 'file_event_filter = LEFT,RIGHT,FIXATION,SACCADE,BLINK,MESSAG
 Eyelink('command', 'enable_automatic_calibration = NO');
 Eyelink('command', 'calibration_type = HV5');
 Eyelink('command', 'generate_default_targets = NO');
-%Eyelink('command','calibration_targets = %d,%d %d,%d %d' ,...
-%Eyelink('command','validation_targets = %d,%d %d,%d %d' ,...
+
 
 targets = sprintf('calibration_targets = %i,%i %i,%i %i,%i %i,%i %i,%i',...
     res.width/2, res.height/2,...
@@ -79,7 +78,8 @@ Eyelink('command', vtargets);
 EyelinkUpdateDefaults(el);
 
 %  open edf file for recording data from Eyelink - CANNOT BE MORE THAN 8 CHARACTERS
-options.edfFile = sprintf('%ds%db%d.edf', subject.initials);
+
+options.edfFile = sprintf('%s.edf', subject.initials);
 Eyelink('Openfile', options.edfFile);
 
 % send information that is written in the preamble

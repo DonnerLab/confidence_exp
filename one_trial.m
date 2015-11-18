@@ -96,6 +96,7 @@ for frame = 1:(ref_duration/ifi)
     vbl = Screen('Flip', window, vbl + (waitframes-0.1) * ifi);
     if frame == 1
         timing.ref_onset = vbl;
+        trigger(trigger_enc.stim_onset);
     end
     waitframes = 1;
     shiftvalue = shiftvalue+expand*driftspeed;
@@ -103,6 +104,7 @@ end
 Screen('DrawDots', window, [xCenter; yCenter], 10, black, [], 1);
 vbl = Screen('Flip', window);
 timing.ref_offset = vbl;
+trigger(trigger_enc.stim_off );
 
 waitframes = (inter_stimulus_delay-0.01)/ifi;
 
@@ -113,8 +115,8 @@ framenum = 1;
 dynamic = [];
 stimulus_onset = nan;
 [low, high] = contrast_colors(contrast_probe(cnt), 0.5);
-cnt = cnt+1;
-while ~((GetSecs - stimulus_onset) >= (length(contrast_probe)-1)*duration-1*ifi) 
+%cnt = cnt+1;
+while ~((GetSecs - stimulus_onset) >= (length(contrast_probe))*duration-2*ifi) 
     
     % Set the right blend function for drawing the gabors
     Screen('BlendFunction', window, 'GL_ONE', 'GL_ZERO');
@@ -134,12 +136,14 @@ while ~((GetSecs - stimulus_onset) >= (length(contrast_probe)-1)*duration-1*ifi)
     vbl = Screen('Flip', window, vbl + (waitframes-.5) * ifi);
     flush_kbqueues(kbqdev);
 
-    if framenum == 1 && cnt == 1
+    if framenum == 1
         Eyelink('message', 'SYNCTIME');
         trigger(trigger_enc.stim_onset);
+        
     elseif framenum == 1 && ~(cnt==1)
         trigger(trigger_enc.con_change);
     end
+    framenum = framenum +1;
     waitframes = 1;
     dynamic = [dynamic vbl];
     
@@ -147,13 +151,14 @@ while ~((GetSecs - stimulus_onset) >= (length(contrast_probe)-1)*duration-1*ifi)
     elapsed = GetSecs;
     if isnan(start)
         stimulus_onset = GetSecs;
+        trigger(trigger_enc.con_change);
         start = GetSecs;
     end
-    if (elapsed-start) > duration-.5*ifi
-        start = GetSecs;
-        [low, high] = contrast_colors(contrast_probe(cnt), 0.5);
+    if (elapsed-start) > (duration-.5*ifi)
+        start = GetSecs;        
         cnt = cnt+1;
-        
+        [low, high] = contrast_colors(contrast_probe(cnt), 0.5);        
+        trigger(trigger_enc.con_change);
     end
     
 end
@@ -166,6 +171,7 @@ timing.animation = dynamic;
 % Draw the fixation point
 Screen('DrawDots', window, [xCenter; yCenter], 10, black, [], 1);
 vbl = Screen('Flip', window, vbl + target );
+
 trigger(trigger_enc.decision_start);
 Eyelink('message', 'decision_start');
 
@@ -232,7 +238,7 @@ if ~key_pressed || error
     fprintf('Error in answer\n')
     wait_period = 1 + feedback_delay + rest_delay;
     WaitSecs(wait_period);
-   correct = nan;
+    correct = nan;
     response = nan;
     confidence = nan;
     rt_choice = nan;
@@ -251,10 +257,10 @@ vbl = Screen('Flip', window, vbl + (waitframes - 0.5) * ifi);
 t1 = PsychPortAudio('Start', pahandle.h, 1, 0, 1);
 if correct
     trigger(trigger_enc.feedback_correct);
-    Eyelink('message', 'decision correct');
+    Eyelink('message', 'feedback correct');
 else
     trigger(trigger_enc.feedback_incorrect);
-    Eyelink('message', 'decision incorrect');
+    Eyelink('message', 'feedback incorrect');
 end
 timing.feedback_start = t1;
 

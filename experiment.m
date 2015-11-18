@@ -34,6 +34,7 @@ try
     session_struct = struct('q', [], 'results', [], 'date', datestr(clock));
     results_struct = session_struct;
     session_identifier =  datestr(now, 30);
+    
     append_data = false;
     if exist(quest_file, 'file') == 2
         if strcmp(input('There is previous data for this subject. Load last QUEST parameters? [y/n] ', 's'), 'y')
