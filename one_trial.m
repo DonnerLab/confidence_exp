@@ -65,12 +65,6 @@ black = BlackIndex(screen_number);
 [xCenter, yCenter] = RectCenter(windowRect);
 ifi = Screen('GetFlipInterval', window);
 
-if correct_location == -1
-    trigger(trigger_enc.stim_strong_right);
-elseif correct_location == 1
-    trigger(trigger_enc.stim_strong_left);
-end
-
 
 %% Baseline Delay period
 
@@ -80,6 +74,11 @@ vbl = Screen('Flip', window);
 timing.TrialOnset = vbl;
 
 trigger(trigger_enc.trial_start);
+if correct_location == -1
+    trigger(trigger_enc.stim_strong_right);
+elseif correct_location == 1
+    trigger(trigger_enc.stim_strong_left);
+end
 
 
 waitframes = (baseline_delay-0.01)/ifi;
@@ -201,12 +200,12 @@ while (GetSecs-start) < 2
                 confidence = 2;
             case {first_conf_low, '2@'}
                 Eyelink('message', 'decision first conf low');
-                trigger(trigger_enc.first_conf_high);
+                trigger(trigger_enc.first_conf_low);
                 response = -1;  
                 confidence = 1;
             case {second_conf_low, '3#'}
                 Eyelink('message', 'decision second conf low');
-                trigger(trigger_enc.second_conf_high);
+                trigger(trigger_enc.second_conf_low);
                 response = 1;                
                 confidence = 1;
             case {second_conf_high, '4$'}
