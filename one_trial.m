@@ -75,7 +75,7 @@ timing.TrialOnset = vbl;
 
 trigger(trigger_enc.trial_start);
 if correct_location == -1
-    trigger(trigger_enc.stim_strong_right);
+    trigger(trigger_enc.stim_strong_right); % Ref correct
 elseif correct_location == 1
     trigger(trigger_enc.stim_strong_left);
 end
@@ -241,6 +241,7 @@ if ~key_pressed || error
     response = nan;
     confidence = nan;
     rt_choice = nan;
+    trigger(trigger_enc.trial_end);
     return
 end
 

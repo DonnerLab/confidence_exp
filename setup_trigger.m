@@ -23,7 +23,7 @@ function trigger = setup_trigger()
 % Feedback - incorrect	10	00010000
 
 trigger.zero = 0;
-trigger.width = 0.005; %1 ms trigger signal
+trigger.width = 0.005; 
 
 trigger.trial_start = 150;
 trigger.trial_end = 151;
@@ -35,8 +35,8 @@ trigger.decision_start = 48;
 trigger.confidence_start = 47;
 trigger.feedback_start = 46;
 
-trigger.stim_strong_left = 41;
-trigger.stim_strong_right = 40;
+trigger.stim_strong_left = 41; % Should be stim correct
+trigger.stim_strong_right = 40; % Should be ref correct
 
 
 trigger.first_conf_high = 24;
