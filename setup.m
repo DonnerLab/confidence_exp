@@ -1,6 +1,6 @@
 % Setup various options
 options.et = 'yes';
-options.do_trigger = 'no';
+options.do_trigger = 'yes';
 
 options.num_trials = 100; % How many trials?
 options.datadir = 'data/';

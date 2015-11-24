@@ -99,7 +99,8 @@ try
             % Sample contrasts.
             contrast = min(1, max(0, (QuestQuantile(q, 0.5))));
             side = randsample([1,-1], 1);
-            noise_sigma = randsample(options.noise_sigmas, 1); 
+            ns  = randsample([1, 2, 3], 1); 
+            noise_sigma = options.noise_sigmas(ns); 
             [side, contrast_fluctuations] = sample_contrast(side, contrast,...
                 noise_sigma, options.baseline_contrast); % Converts effective contrast to absolute contrst
             expand = randsample([-1, 1], 1);
@@ -120,7 +121,7 @@ try
                 'kbqdev', options.kbqdev}];
             
             [correct, response, confidence, rt_choice, timing] = one_trial(window, options.window_rect,...
-                screenNumber, side, ringtex, audio,  trigger_enc, options.beeps, options.ppd, trial_options);
+                screenNumber, side, ns, ringtex, audio,  trigger_enc, options.beeps, options.ppd, trial_options);
             
             timings{trial} = timing;
             if ~isnan(correct) && ~repeat_trial

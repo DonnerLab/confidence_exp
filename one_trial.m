@@ -1,4 +1,4 @@
-function [correct, response, confidence, rt_choice, timing] = one_trial(window, windowRect, screen_number, correct_location, ringtex, pahandle, trigger_enc, beeps, ppd, variable_arguments)
+function [correct, response, confidence, rt_choice, timing] = one_trial(window, windowRect, screen_number, correct_location, ns, ringtex, pahandle, trigger_enc, beeps, ppd, variable_arguments)
 %% function [correct, response, confidence, rt_choice, rt_conf] = one_trial(window, windowRect, screen_number, correct_location, gabortex, gaborDimPix, pahandle, variable_arguments)
 %
 % Presents a circular contracting/expanding grating with a reference
@@ -80,6 +80,7 @@ elseif correct_location == 1
     trigger(trigger_enc.stim_strong_left);
 end
 
+trigger(trigger_enc.noise_sigma + ns);
 
 waitframes = (baseline_delay-0.01)/ifi;
 

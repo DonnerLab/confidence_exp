@@ -38,6 +38,8 @@ trigger.feedback_start = 46;
 trigger.stim_strong_left = 41; % Should be stim correct
 trigger.stim_strong_right = 40; % Should be ref correct
 
+trigger.noise_sigma = 30; 
+
 
 trigger.first_conf_high = 24;
 trigger.first_conf_low = 23;

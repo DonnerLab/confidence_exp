@@ -79,7 +79,7 @@ EyelinkUpdateDefaults(el);
 
 %  open edf file for recording data from Eyelink - CANNOT BE MORE THAN 8 CHARACTERS
 
-options.edfFile = sprintf('%s.edf', subject.initials);
+options.edfFile = sprintf('%sb.edf', subject.initials);
 Eyelink('Openfile', options.edfFile);
 
 % send information that is written in the preamble
