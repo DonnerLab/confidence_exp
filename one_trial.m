@@ -74,6 +74,7 @@ vbl = Screen('Flip', window);
 timing.TrialOnset = vbl;
 
 trigger(trigger_enc.trial_start);
+WaitSecs(0.005);
 if correct_location == -1
     trigger(trigger_enc.stim_strong_right); % Ref correct
 elseif correct_location == 1
