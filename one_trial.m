@@ -79,9 +79,9 @@ if correct_location == -1
 elseif correct_location == 1
     trigger(trigger_enc.stim_strong_left);
 end
-
+WaitSecs(0.005);
 trigger(trigger_enc.noise_sigma + ns);
-
+WaitSecs(0.001);
 waitframes = (baseline_delay-0.01)/ifi;
 
 flush_kbqueues(kbqdev);
@@ -93,6 +93,8 @@ shiftvalue = 0;
 for frame = 1:(ref_duration/ifi)
     Screen('DrawTexture', window, ringtex, [], [], [], [], [], low, [], [],...
         [high(1), high(2), high(3), high(4), shiftvalue, ringwidth, radius, inner_annulus, sigma, cutoff, xCenter, yCenter]);
+    Screen('DrawDots', window, [xCenter; yCenter], 10, black, [], 1);
+
     vbl = Screen('Flip', window, vbl + (waitframes-0.1) * ifi);
     if frame == 1
         timing.ref_onset = vbl;
