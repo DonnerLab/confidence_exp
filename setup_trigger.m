@@ -27,6 +27,8 @@ trigger.width = 0.005;
 
 trigger.trial_start = 150;
 trigger.trial_end = 151;
+trigger.localizer_start = 160;
+trigger.localizer_end = 161;
 
 trigger.stim_onset = 64; % fixation is 64
 trigger.con_change = 50;
