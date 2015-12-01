@@ -74,7 +74,7 @@ for i = 1:length(devices)
 end
 devices(i)
 % check that we found the low-latency audio port
-assert(numel(strfind(devices(i).DeviceName, 'UA-25')) > 0, 'could not detect the right audio port! aborting')
+%assert(numel(strfind(devices(i).DeviceName, 'UA-25')) > 0, 'could not detect the right audio port! aborting')
 audio = [];
 
 %i = 10; % for the EEG lab
