@@ -120,6 +120,14 @@ try
                 'expand', expand,...
                 'kbqdev', options.kbqdev}];
             
+            % Encode trial number in triggers.
+            bstr = dec2bin(trial, 8);
+            pins = find(str2num(reshape(bstr',[],1))');
+            WaitSecs(0.005);
+            for pin = pins
+                trigger(pin);
+                WaitSecs(0.005);
+            end
             [correct, response, confidence, rt_choice, timing] = one_trial(window, options.window_rect,...
                 screenNumber, side, ns, ringtex, audio,  trigger_enc, options.beeps, options.ppd, trial_options);
             
@@ -170,6 +178,7 @@ Eyelink('StopRecording');
 session_struct.q = q;
 %session_struct.results = struct2table(results);
 session_struct.results = results;
+save( fullfile(options.datadir, sprintf('%s_%s_results.mat', subject.initials, datestr(clock))), 'session_struct')
 if ~append_data
     results_struct = session_struct;
 else

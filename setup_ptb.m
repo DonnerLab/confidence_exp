@@ -8,7 +8,7 @@ white = WhiteIndex(screenNumber);
 black = BlackIndex(screenNumber);
 grey = white / 2;
 % Open the screen
-Screen('Preference', 'SkipSyncTests', 1);
+Screen('Preference', 'SkipSyncTests', 0);
 [window, windowRect] = Screen('OpenWindow', screenNumber, grey);
 %[window, windowRect] = Screen('OpenWindow', screenNumber, grey, [0, 0, 400, 400]);
 options.window_rect = windowRect;
