@@ -19,7 +19,19 @@ end
 fprintf('Running experiment on a ''%s'' tracker.\n', vs );
 
 el = EyelinkInitDefaults(window);
-
+% set some more global info parameters
+% below are old sound definitions
+el.targetdisplaysound='EyelinkTargetBeep';
+el.calibrationfailedsound='EyelinkErrorBeep';
+el.calibrationsuccesssound='EyelinkSuccessBeep';
+el.targetbeep=0;  % sound a beep when a target is presented
+el.feedbackbeep=0;  % sound a beep after calibration/drift correction
+el.cal_target_beep=[600 0. 0.05];
+el.drift_correction_target_beep=[600 0. 0.05];
+el.calibration_failed_beep=[400 0. 0.25];
+el.calibration_success_beep=[800 0. 0.25];
+el.drift_correction_failed_beep=[400 0. 0.25];
+el.drift_correction_success_beep=[800 0. 0.25];
 % % SEND SCREEN SIZE TO EL SO THAT VISUAL ANGLE MEASUREMENTS ARE CORRECT
 rv = []; % collect return values from eyetracker commands
 
@@ -92,5 +104,6 @@ preamble_txt = sprintf('%s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %d', 
     'date', datestr(now),...
     'screen_distance', options.dist);
 Eyelink('command', 'add_file_preamble_text ''%s''', preamble_txt);
+
 
 end

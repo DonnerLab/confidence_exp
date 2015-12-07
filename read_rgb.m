@@ -1,5 +1,5 @@
 function rgb = read_rgb()
-[status, remainder] = system('colorhug-cmd take-readings');
+[status, remainder] = system('/usr/bin/colorhug-cmd take-readings');
 if status > 0
     error('Can not read RGB values from colorhug')
 end

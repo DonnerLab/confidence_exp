@@ -1,6 +1,6 @@
 % Setup various options
 options.et = 'yes';
-options.do_trigger = 'yes';
+options.do_trigger = 'no';
 
 options.num_trials = 100; % How many trials?
 options.datadir = 'data/';
@@ -37,8 +37,8 @@ quest.pThreshold = .75; % Performance level and other QUEST parameters
 quest.beta = 3.5;
 quest.delta = 0.5/128;
 quest.gamma = 0.15;
-quest.threshold_guess = 0.025;
-quest.threshold_guess_sigma = 0.25;
+quest.threshold_guess = 0.05;
+quest.threshold_guess_sigma = 0.15;
 
 
 % Load marked feedback beeps
