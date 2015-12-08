@@ -101,7 +101,7 @@ try
             side = randsample([1,-1], 1);
             ns  = randsample([1, 2, 3], 1); 
             noise_sigma = options.noise_sigmas(ns); 
-            [side, contrast_fluctuations] = sample_contrast(side, contrast,...
+            [side, contrast_fluctuations, eff_noise] = sample_contrast(side, contrast,...
                 noise_sigma, options.baseline_contrast); % Converts effective contrast to absolute contrst
             expand = randsample([-1, 1], 1);
             fprintf('Correct is: %i, mean contrast is %f\n', side, mean(contrast_fluctuations))
@@ -125,7 +125,7 @@ try
             
             timings{trial} = timing;
             if ~isnan(correct) && ~repeat_trial
-                q = QuestUpdate(q, contrast, correct);
+                q = QuestUpdate(q, contrast + mean(eff_noise), correct);
             end
             results(trial) = struct('response', response, 'side', side, 'choice_rt', rt_choice, 'correct', correct,...
                 'contrast', contrast, 'contrast_probe', contrast_fluctuations, 'contrast_ref', options.baseline_contrast,...
@@ -142,11 +142,13 @@ try
     end
 catch ME
     if (strcmp(ME.identifier,'EXP:Quit'))
+        PsychPortAudio('Close')
         return
     else
+        PsychPortAudio('Close')
         disp(getReport(ME,'extended'));
         Eyelink('StopRecording');        
-        Screen('LoadNormalizedGammaTable', window, old_gamma_table);
+        %Screen('LoadNormalizedGammaTable', window, old_gamma_table);
 
         rethrow(ME);
     end
@@ -170,6 +172,7 @@ Eyelink('StopRecording');
 session_struct.q = q;
 %session_struct.results = struct2table(results);
 session_struct.results = results;
+save(fullfile(options.datadir, sprintf('%s_%s_results.csv', subject.initials, datestr(clock))), 'session_struct')
 if ~append_data
     results_struct = session_struct;
 else
@@ -177,4 +180,4 @@ else
     results_struct(length(results_struct)+1) = session_struct;
 end
 save(fullfile(options.datadir, 'quest_results.mat'), 'results_struct')
-%writetable(session_struct.results, fullfile(datadir, sprintf('%s_%s_results.csv', initials, datestr(clock))));
+%writetable(session_struct.results, );
