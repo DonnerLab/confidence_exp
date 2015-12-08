@@ -10,7 +10,7 @@ grey = white / 2;
 % Open the screen
 Screen('Preference', 'SkipSyncTests', 0);
 [window, windowRect] = Screen('OpenWindow', screenNumber, grey);
-%[window, windowRect] = Screen('OpenWindow', screenNumber, grey, [0, 0, 400, 400]);
+%[window, windowRect] = Screen('OpenWindow', screenNumber, grey, [0, 0, 1000, 800]);
 options.window_rect = windowRect;
 % Switch color specification to use the 0.0 - 1.0 range instead of the 0 -
 % 255 range. This is more natural for these kind of stimuli:
