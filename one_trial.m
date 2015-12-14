@@ -74,6 +74,7 @@ vbl = Screen('Flip', window);
 timing.TrialOnset = vbl;
 
 trigger(trigger_enc.trial_start);
+WaitSecs(0.005);
 if correct_location == -1
     trigger(trigger_enc.stim_strong_right); % Ref correct
 elseif correct_location == 1
@@ -141,9 +142,7 @@ while ~((GetSecs - stimulus_onset) >= (length(contrast_probe))*duration-2*ifi)
     if framenum == 1
         Eyelink('message', 'SYNCTIME');
         trigger(trigger_enc.stim_onset);
-        
-    elseif framenum == 1 && ~(cnt==1)
-        trigger(trigger_enc.con_change);
+        WaitSecs(0.001);
     end
     framenum = framenum +1;
     waitframes = 1;
@@ -153,6 +152,7 @@ while ~((GetSecs - stimulus_onset) >= (length(contrast_probe))*duration-2*ifi)
     elapsed = GetSecs;
     if isnan(start)
         stimulus_onset = GetSecs;
+        Eyelink('message', sprintf('conrast %f',contrast_probe(cnt)));
         trigger(trigger_enc.con_change);
         start = GetSecs;
     end
@@ -161,6 +161,8 @@ while ~((GetSecs - stimulus_onset) >= (length(contrast_probe))*duration-2*ifi)
         cnt = cnt+1;
         [low, high] = contrast_colors(contrast_probe(cnt), 0.5);        
         trigger(trigger_enc.con_change);
+        Eyelink('message', sprintf('conrast %f',contrast_probe(cnt)));
+
     end
     
 end
@@ -175,7 +177,7 @@ Screen('DrawDots', window, [xCenter; yCenter], 10, black, [], 1);
 vbl = Screen('Flip', window, vbl + target );
 
 trigger(trigger_enc.decision_start);
-Eyelink('message', 'decision_start');
+Eyelink('message', 'decision_start 1');
 
 timing.response_cue = vbl;
 start = GetSecs;
@@ -197,22 +199,22 @@ while (GetSecs-start) < 2
             case quit
                 throw(MException('EXP:Quit', 'User request quit'));
             case {first_conf_high, '1!'}
-                Eyelink('message', 'decision first conf high');
+                Eyelink('message', sprintf('decision %i', trigger_enc.first_conf_high))
                 trigger(trigger_enc.first_conf_high);
                 response = -1;
                 confidence = 2;
             case {first_conf_low, '2@'}
-                Eyelink('message', 'decision first conf low');
+                Eyelink('message', sprintf('decision %i', trigger_enc.first_conf_low))
                 trigger(trigger_enc.first_conf_low);
                 response = -1;  
                 confidence = 1;
             case {second_conf_low, '3#'}
-                Eyelink('message', 'decision second conf low');
+                Eyelink('message', sprintf('decision %i', trigger_enc.second_conf_low))
                 trigger(trigger_enc.second_conf_low);
                 response = 1;                
                 confidence = 1;
             case {second_conf_high, '4$'}
-                Eyelink('message', 'decision second conf high');
+                Eyelink('message', sprintf('decision %i', trigger_enc.second_conf_high));
                 trigger(trigger_enc.second_conf_high);
                 response = 1;
                 confidence = 2;                
@@ -236,7 +238,7 @@ timing.RT = RT;
 
 if ~key_pressed || error
     trigger(trigger_enc.no_decisions);
-    Eyelink('message', 'decision none');
+    Eyelink('message', 'decision 88');
     fprintf('Error in answer\n')
     wait_period = 1 + feedback_delay + rest_delay;
     WaitSecs(wait_period);
@@ -260,10 +262,10 @@ vbl = Screen('Flip', window, vbl + (waitframes - 0.5) * ifi);
 t1 = PsychPortAudio('Start', pahandle.h, 1, 0, 1);
 if correct
     trigger(trigger_enc.feedback_correct);
-    Eyelink('message', 'feedback correct');
+    Eyelink('message', 'feedback 1');
 else
     trigger(trigger_enc.feedback_incorrect);
-    Eyelink('message', 'feedback incorrect');
+    Eyelink('message', 'feedback -1');
 end
 timing.feedback_start = t1;
 

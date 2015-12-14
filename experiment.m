@@ -101,7 +101,7 @@ try
             side = randsample([1,-1], 1);
             ns  = randsample([1, 2, 3], 1); 
             noise_sigma = options.noise_sigmas(ns); 
-            [side, contrast_fluctuations] = sample_contrast(side, contrast,...
+            [side, contrast_fluctuations, eff_noise] = sample_contrast(side, contrast,...
                 noise_sigma, options.baseline_contrast); % Converts effective contrast to absolute contrst
             expand = randsample([-1, 1], 1);
             fprintf('Correct is: %i, mean contrast is %f\n', side, mean(contrast_fluctuations))
@@ -120,12 +120,20 @@ try
                 'expand', expand,...
                 'kbqdev', options.kbqdev}];
             
+            % Encode trial number in triggers.
+            bstr = dec2bin(trial, 8);
+            pins = find(str2num(reshape(bstr',[],1))');
+            WaitSecs(0.005);
+            for pin = pins
+                trigger(pin);
+                WaitSecs(0.005);
+            end
             [correct, response, confidence, rt_choice, timing] = one_trial(window, options.window_rect,...
                 screenNumber, side, ns, ringtex, audio,  trigger_enc, options.beeps, options.ppd, trial_options);
             
             timings{trial} = timing;
             if ~isnan(correct) && ~repeat_trial
-                q = QuestUpdate(q, contrast, correct);
+                 q = QuestUpdate(q, contrast + mean(eff_noise), correct);
             end
             results(trial) = struct('response', response, 'side', side, 'choice_rt', rt_choice, 'correct', correct,...
                 'contrast', contrast, 'contrast_probe', contrast_fluctuations, 'contrast_ref', options.baseline_contrast,...
@@ -170,6 +178,8 @@ Eyelink('StopRecording');
 session_struct.q = q;
 %session_struct.results = struct2table(results);
 session_struct.results = results;
+
+save( fullfile(options.datadir, sprintf('%s_%s_results.mat', subject.initials, datestr(clock))), 'session_struct')
 if ~append_data
     results_struct = session_struct;
 else
