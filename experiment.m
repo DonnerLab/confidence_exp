@@ -159,6 +159,8 @@ catch ME
         rethrow(ME);
     end
 end
+Eyelink('StopRecording');        
+
 LoadIdentityClut(window);
 PsychPortAudio('Close');
 sca

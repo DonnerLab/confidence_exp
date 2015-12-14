@@ -20,6 +20,8 @@ options.ppd = estimate_pixels_per_degree(options);
 % Parameters for sampling the contrast + contrast noise
 options.baseline_contrast = 0.5;
 options.noise_sigmas = [.05 .1 .15];
+options.nsreverse = containers.Map(options.noise_sigmas, [1,2,3]);
+
 
 
 options.ringwidth = options.ppd*3/4;
